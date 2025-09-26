@@ -29,7 +29,7 @@ jobs:
       run: uv python install 3.13
 
     - name: Install dependencies
-      run: uv sync --extra lint
+      run: uv sync --group lint
 
     - name: Lint with ruff
       run: uv run ruff check .
@@ -61,7 +61,7 @@ jobs:
       run: uv python install ${{ matrix.python-version }}
 
     - name: Install dependencies
-      run: uv sync --extra test
+      run: uv sync --group test
 
     - name: Test with pytest
       run: uv run pytest --cov=text-to-control --cov-report=xml --cov-report=term-missing
