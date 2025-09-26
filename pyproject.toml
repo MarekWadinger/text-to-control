@@ -1,0 +1,28 @@
+[project]
+name = "text-to-control"
+version = "0.1.0"
+description = "Agent-based framework for automated control system design"
+readme = "README.md"
+authors = [
+    { name = "Marek Wadinger", email = "marekwadinger5506@gmail.com" },
+    { name = "Adriána Bartková", email = "adrianka.bartkova48@gmail.com" }
+]
+requires-python = ">=3.12"
+
+[dependency-groups]
+dev = [
+    "commitizen>=4.9.1",
+    "pre-commit>=4.3.0",
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.13.1",
+    "ty>=0.0.1a21",
+]
+lint = [
+    "ruff>=0.13.1",
+    "ty>=0.0.1a21",
+]
+test = [
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+]
