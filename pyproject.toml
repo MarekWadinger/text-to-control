@@ -8,6 +8,9 @@ authors = [
     { name = "Adriána Bartková", email = "adrianka.bartkova48@gmail.com" }
 ]
 requires-python = ">=3.12"
+dependencies = [
+    "pydantic-ai-slim[google]>=1.0.15",
+]
 
 [dependency-groups]
 dev = [
