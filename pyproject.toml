@@ -10,6 +10,8 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "pydantic-ai-slim[google]>=1.0.15",
+    "pydantic-settings>=2.11.0",
+    "pyomo>=6.9.4",
 ]
 
 [dependency-groups]
