@@ -9,12 +9,17 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "logfire>=4.13.2",
     "pydantic-ai-slim[google]>=1.0.15",
     "pydantic-settings>=2.11.0",
     "pyomo>=6.9.4",
 ]
 
 [dependency-groups]
+app = [
+    "fastapi>=0.119.0",
+    "uvicorn>=0.37.0",
+]
 dev = [
     "commitizen>=4.9.1",
     "pre-commit>=4.3.0",
