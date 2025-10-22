@@ -1,18 +1,20 @@
-import runpy
-
 import anyio
 
-from agents import ExpertDeps, IntegratorDeps, MyAgent
+from agents import AgentsSuite, ExpertDeps, IntegratorDeps, ValidatorDeps
 
 
 async def main():
-    print("\n Starting Expert & Integrator Agents Pipeline...\n")
+    """Run the Expert → Integrator → Validator pipeline asynchronously.
 
-    # initialization of agents
-    expert = MyAgent("Expert")
-    integrator = MyAgent("Integrator")
+    Start the agents suite, send the optimization prompt to the Expert agent,
+    and coordinate subsequent Integrator and Validator steps.
+    """
+    print("\n Starting Expert → Integrator → Validator pipeline...\n")
 
-    # desination of the optimization problem
+    suite = AgentsSuite()
+
+    # expert Step
+
     optimization_prompt = """
 A farmer is growing two types of vegetables: Tomatoes and Cucumbers.
 
@@ -33,79 +35,75 @@ Formulate and solve a Pyomo optimization model to maximize total profit.
 Use SolverFactory('glpk') or SolverFactory('ipopt') as appropriate.
 Show the final optimal values and total profit.
 """
-    # --------------------------------------------------------
-
     deps_expert = ExpertDeps()
-    expert_result = await expert.solve_task(
+    expert_result = await suite.expert.run(
         optimization_prompt, deps=deps_expert
     )
     expert_output = expert_result.output
 
-    print(" [Expert Explanation]:\n", expert_output.explanation)
-    print("\n [Generated Pyomo Code Preview]:\n")
-    print(expert_output.code[:600], "...\n")
+    print(" [Expert Reformulation]:\n")
+    print(expert_output.reformulated_problem)
+    print("\n [Assumptions]:", expert_output.assumptions)
 
-    # --------------------------------------------------------
-
-    with open("generated_code.py", "w", encoding="utf-8") as f:
-        f.write(expert_output.code.strip())
-    print(" Expert code saved to generated_code.py\n")
-
-    # --------------------------------------------------------
-
-    print(" Running generated Pyomo model...\n")
-    try:
-        result = runpy.run_path("generated_code.py")
-        print("\n Model executed successfully!\n")
-
-        if "model" in result:
-            model = result["model"]
-            try:
-                print(
-                    " Solver Status:",
-                    model.solutions.load_from.results.solver.status,
-                )
-            except Exception:
-                pass
-        else:
-            print(
-                "ℹ Model variable not found, but script executed successfully."
-            )
-    except Exception as e:
-        print(f" Error during model execution: {e}")
-
-    # --------------------------------------------------------
-
+    # integrator Step
     deps_integrator = IntegratorDeps(
-        expert_code=expert_output.code,
+        reformulated_text=expert_output.reformulated_problem,
+        expert_assumptions=expert_output.assumptions,
     )
-    integrator_prompt = f"""
-You are the Integrator Agent. Review the following Pyomo code for:
-1. Correctness (does it match the problem formulation?),
-2. Efficiency (is the model well-structured?),
-3. Best practices (naming, solver use, duals, etc.),
-4. Suggestions for improvement.
+    # Create the prompt for the Integrator Agent - halucinations fix
 
-Code to review:
-{expert_output.code}
+    integrator_prompt = f"""
+You are the Integrator Agent.
+Your task is to write a runnable Pyomo model that **exactly** implements this problem:
+
+{expert_output.reformulated_problem}
+
+Assumptions:
+{expert_output.assumptions}
+
+Rules:
+- Use only Pyomo (import pyomo.environ as pyo).
+- Do NOT import numpy, pandas, or any other package.
+- Define model = pyo.ConcreteModel().
+- Implement sets, parameters, variables, objective, and constraints exactly as written.
+- Do not invent any new data, sets, or structure.
+- Use GLPK solver; fallback to CBC if GLPK is unavailable.
+- After solving, print solver status, variable values, and objective value.
+- Output only pure Python code (no markdown, explanations, or comments).
+- The final script will be saved as 'generated_code.py'.
 """
-    integrator_result = await integrator.solve_task(
+
+    print("\n Generating executable Pyomo model code...\n")
+    integrator_result = await suite.integrator.run(
         integrator_prompt, deps=deps_integrator
     )
-    feedback = integrator_result.output
+    integrator_output = integrator_result.output
 
-    print("\n [Integrator Feedback]")
-    print("Correctness:", feedback.correctness)
-    print("\nEfficiency:", feedback.efficiency)
-    print("\nBest Practices:", feedback.best_practices)
-    print("\nSuggestions:", feedback.improvement_suggestions)
+    pyomo_code = integrator_output.code.strip()
+    print(" [Generated Pyomo Code Preview]:\n")
+    print(pyomo_code[:800], "...\n")
 
-    # --------------------------------------------------------
+    with open("generated_code.py", "w", encoding="utf-8") as f:
+        f.write(pyomo_code)
+    print(" Model code saved to generated_code.py\n")
 
-    print("\n Pipeline completed successfully.")
-    print(
-        " Agents collaborated to formulate, solve, and review the optimization model."
-    )
+    # Validation Step
+
+    print(" Validating the generated Pyomo model...\n")
+    deps_validator = ValidatorDeps(code=pyomo_code)
+    validator_result = await suite.validator.run("", deps=deps_validator)
+    validation_output = validator_result.output
+
+    print("\n [Validation Results]:")
+    print("Success:", validation_output.success)
+    print("Error:", validation_output.error)
+    print("\n--- Solver Output ---\n")
+    print(validation_output.stdout)
+    print("----------------------")
+    print("Objective Name:", validation_output.objective_name)
+    print("Objective Value:", validation_output.objective_value)
+
+    print("\n Pipeline completed.\n")
 
 
 if __name__ == "__main__":
