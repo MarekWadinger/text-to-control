@@ -1,6 +1,12 @@
 import anyio
 
-from agents import AgentsSuite, ExpertDeps, IntegratorDeps, ValidatorDeps
+from agents import (
+    AgentsSuite,
+    ExpertDeps,
+    ExpertOutput,
+    IntegratorDeps,
+    ValidatorDeps,
+)
 
 
 async def main():
@@ -31,18 +37,32 @@ Profit per plant:
 - Cucumbers: 3 €
 
 Goal:
-Formulate and solve a Pyomo optimization model to maximize total profit.
-Use SolverFactory('glpk') or SolverFactory('ipopt') as appropriate.
-Show the final optimal values and total profit.
+Help me maximize my profit by determining how many plants of each vegetable I should grow, considering the land and water constraints.
 """
-    deps_expert = ExpertDeps()
-    expert_result = await suite.expert.run(
-        optimization_prompt, deps=deps_expert
-    )
-    expert_output = expert_result.output
+    # TODO: Implement max reties or clarification loop
+    while True:
+        deps_expert = ExpertDeps()
+        expert_result = await suite.expert.run(
+            optimization_prompt, deps=deps_expert
+        )
+        expert_output = expert_result.output
+        if isinstance(expert_output, ExpertOutput):
+            break
+        else:
+            print(
+                " Expert Agent requested clarification. Please address the following questions:\n"
+            )
+            for question in expert_output.clarification_questions:
+                print(" -", question)
+            user_input = input(
+                "\n Provide clarifications to the Expert Agent and press Enter to continue..."
+            )
+            optimization_prompt += f"\nClarifications: {user_input}\n"
 
     print(" [Expert Reformulation]:\n")
     print(expert_output.reformulated_problem)
+    print(" [Problem Type]:\n")
+    print(expert_output.problem_type)
     print("\n [Assumptions]:", expert_output.assumptions)
 
     # integrator Step

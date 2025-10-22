@@ -5,6 +5,7 @@ import runpy
 import shutil
 import tempfile
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel
@@ -123,10 +124,29 @@ class ValidatorDeps:
 # output schemas for agents
 
 
+class ExpertInquiry(BaseModel):
+    """Schema for the ExpertAgent inquiry: questions to clarify problem."""
+
+    explanation: str
+    clarification_questions: list[str]
+
+
+class ProblemType(str, Enum):
+    """Enumeration of problem types."""
+
+    LP = "Linear Programming"
+    ILP = "Integer Programming"
+    MILP = "Mixed-Integer Programming"
+    NLP = "Nonlinear Programming"
+    SP = "Stochastic Programming"
+    OTHER = "Other"
+
+
 class ExpertOutput(BaseModel):
     """Schema for the ExpertAgent output: reformulated problem text and assumptions."""
 
     reformulated_problem: str
+    problem_type: ProblemType
     assumptions: list[str]
 
 
@@ -146,35 +166,25 @@ class ValidatorOutput(BaseModel):
     objective_value: Any | None = None
 
 
+# instructions
+with open("src/instructions/expert.md") as f:
+    expert_instructions = f.read()
+
 #  Expert Agent
 
 
 class ExpertAgent:
-    """Reformulate user optimization problems into clear Pyomo models and ask clarifying questions."""
+    """Reformulate user optimization problems into polished tasks while asking clarifying questions."""
 
     def __init__(self):
         """Create the Expert agent configured to analyze problems and emit reformulations or clarification questions."""
         self.agent = Agent(
             model,
             deps_type=ExpertDeps,
-            output_type=ExpertOutput,
+            output_type=[ExpertOutput, ExpertInquiry],
             retries=3,
-            system_prompt=(
-                "You are the **Expert Agent**, a senior specialist in mathematical optimization and modeling with Pyomo. "
-                "Your job is to read and reformulate the user's optimization problem into a clear mathematical form suitable for implementation. "
-                "Identify all variables, objectives, and constraints. "
-                "If the problem is ambiguous or lacks data (e.g., missing coefficients, limits, or costs), list assumptions explicitly. "
-                "If something is unclear, call the `record_question` tool to ask for clarification."
-            ),
+            instructions=expert_instructions,
         )
-
-        @self.agent.tool()
-        def record_question(ctx: RunContext[ExpertDeps], question: str) -> str:
-            """Record a clarification question asked by the Expert Agent."""
-            if ctx.deps.history is None:
-                ctx.deps.history = []
-            ctx.deps.history.append(question)
-            return f"Question recorded: {question}"
 
 
 #  Integrator Agent
