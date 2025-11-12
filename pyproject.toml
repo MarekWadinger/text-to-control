@@ -9,10 +9,12 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "cyipopt>=1.6.1",
     "logfire>=4.13.2",
     "pydantic-ai-slim[google]>=1.0.15",
     "pydantic-settings>=2.11.0",
     "pyomo>=6.9.4",
+    "rich>=14.2.0",
 ]
 
 [dependency-groups]
