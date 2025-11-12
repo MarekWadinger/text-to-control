@@ -1,0 +1,20 @@
+A farmer is growing two types of vegetables: Tomatoes and Cucumbers.
+
+Available resources:
+
+- Land: 1000 m²
+- Water: 3000 liters
+
+Profit per plant:
+
+- Tomatoes: 4 €
+- Cucumbers: 3 €
+
+Constraints:
+
+- Each Tomato plant requires 2 m² of land and 5 liters of water.
+- Each Cucumber plant requires 1 m² of land and 3 liters of water.
+
+Objective:
+
+- Maximize total profit from selling the vegetables

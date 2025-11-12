@@ -1,0 +1,59 @@
+A distribution company needs to deliver goods from multiple warehouses to several retail stores.
+The company wants to minimize the total transportation cost while ensuring that store demands are satisfied and warehouse capacities are not exceeded.
+
+Warehouses:
+- W1 located in Bratislava
+- W2 located in Košice
+
+Stores:
+- S1 in Trnava
+- S2 in Nitra
+- S3 in Banská Bystrica
+
+Each warehouse has a limited shipping capacity (in tons), but the exact capacities are not specified yet.
+Each store has a certain demand (in tons), but the demand for S3 is currently unknown.
+
+The transportation cost per ton between each warehouse and store is as follows (in €):
+
+| From | To | Cost €/ton |
+|------|----|-------------|
+| W1 | S1 | 14 |
+| W1 | S2 | 10 |
+| W1 | S3 | 18 |
+| W2 | S1 | 12 |
+| W2 | S2 | 9 |
+| W2 | S3 | 11 |
+
+Objective:
+Minimize total transportation cost while meeting all store demands and not exceeding warehouse capacities.
+
+Constraints:
+- Each store must receive its total demand from any combination of warehouses.
+- The total amount shipped from each warehouse cannot exceed its available capacity.
+- Negative shipments are not allowed.
+
+Decision variables:
+- \( x_{ij} \): tons shipped from warehouse \( i \) to store \( j \).
+
+Additional note:
+The company mentioned that there might be a maximum shipping distance limit (in km), but this limit has not been defined yet.
+
+# NOTE: The following data were provided as clarifications earlier.
+# These lines are comments and will be ignored by the Expert Agent.
+
+The maximum shipping capacity for each warehouse is:
+- W1: 800 tons
+- W2: 700 tons
+
+The demand for each store is:
+- S1: 400 tons
+- S2: 500 tons
+- S3: 600 tons
+
+There is no maximum shipping distance limit, but the distances are:
+- W1 to S1: 100 km
+- W1 to S2: 150 km
+- W1 to S3: 200 km
+- W2 to S1: 120 km
+- W2 to S2: 100 km
+- W2 to S3: 180 km
