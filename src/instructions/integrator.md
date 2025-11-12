@@ -21,6 +21,15 @@ Receive the reformulated optimization problem from the **Expert Agent**, validat
 
 ---
 
+## Rules
+
+- Use only Pyomo (import pyomo.environ as pyo).
+- Define model = pyo.ConcreteModel().
+- Implement sets, parameters, variables, objective, and constraints exactly as written.
+- Use GLPK solver; fallback to CBC if GLPK is unavailable.
+- After solving, print solver status, variable values, and objective value.
+- Output only pure Python code.
+
 ## Pyomo Code Rules
 
 - Generate code **only when all required data are provided**.
