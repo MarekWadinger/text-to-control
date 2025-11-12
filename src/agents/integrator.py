@@ -17,7 +17,6 @@ class IntegratorDeps:
 
     reformulated_text: str | None = None
     expert_assumptions: list[str] = field(default_factory=list)
-    generated_code: str | None = None
 
 
 class IntegratorOutput(BaseModel):
@@ -92,6 +91,15 @@ def ruff_check(code: str) -> str:
     finally:
         if os.path.exists(path):
             os.remove(path)
+
+
+def code_no_msglev_check(code: str) -> str:
+    """Run check to verify that the code does not contain the msglev option."""
+    if "--msglev" in code:
+        raise ModelRetry(
+            "The code contains the msglev option, which is prohibited."
+        )
+    return code
 
 
 class IntegratorAgent:
