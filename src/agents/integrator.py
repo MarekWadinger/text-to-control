@@ -6,8 +6,9 @@ from dataclasses import dataclass, field
 
 from pydantic import BaseModel
 from pydantic_ai import Agent
+from pydantic_ai.exceptions import ModelRetry
 
-from .base import ModelRetry, model
+from .base import model
 
 
 @dataclass
