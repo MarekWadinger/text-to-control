@@ -28,7 +28,7 @@ async def main():
         with logfire.span("expert"):
             expert = ExpertAgent().agent
             optimization_prompt = open(
-                "examples/allocation_problem.txt", "r", encoding="utf-8"
+                "examples/allocation_problem.txt", encoding="utf-8"
             ).read()
 
             while True:
@@ -52,10 +52,7 @@ async def main():
         # --- Integrator step ---
         with logfire.span("integrator"):
             integrator = IntegratorAgent().agent
-            deps_integrator = IntegratorDeps(
-                reformulated_text=expert_output.reformulated_problem,
-                expert_assumptions=expert_output.assumptions,
-            )
+            deps_integrator = IntegratorDeps(**expert_output.model_dump())
 
             expert_prompt = f"""
         You are the Integrator Agent.

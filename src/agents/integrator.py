@@ -1,22 +1,23 @@
 import os
-import re
 import subprocess
 import tempfile
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import ModelRetry
 
 from .base import model
+from .expert import ProblemType
 
 
 @dataclass
 class IntegratorDeps:
     """Dependencies used by the IntegratorAgent during code generation."""
 
-    reformulated_text: str | None = None
-    expert_assumptions: list[str] = field(default_factory=list)
+    reformulated_problem: str
+    problem_type: ProblemType
+    assumptions: list[str]
 
 
 class IntegratorOutput(BaseModel):
@@ -25,7 +26,7 @@ class IntegratorOutput(BaseModel):
     code: str
 
 
-with open("src/instructions/integrator.md", "r", encoding="utf-8") as f:
+with open("src/instructions/integrator.md", encoding="utf-8") as f:
     integrator_instructions = f.read()
 
 
@@ -45,41 +46,9 @@ def ruff_check(code: str) -> str:
 
         output = (process.stdout or "").strip()
 
-        non_fatal_codes = [
-            "E741",
-            "E722",
-            "N802",
-            "N803",
-            "F841",
-            "E402",
-            "E305",
-            "PLR1722",
-            "T201",
-            "E0602",
-            "PLR2004",
-            "F811",
-            "E302",
-            "N806",
-            "ANN001",
-            "ANN201",
-            "S101",
-        ]
-
-        found_codes = re.findall(r"([A-Z]\d{3,4})", output)
-
         if "All checks passed!" in output or process.returncode == 0:
             print("\n[Ruff] Code passed or auto-fixed successfully.\n")
-            with open(path, "r", encoding="utf-8") as f:
-                return f.read()
-
-        if found_codes and all(
-            code in non_fatal_codes for code in found_codes
-        ):
-            print(
-                f"\n[Ruff] Non-fatal issues found: {found_codes} — proceeding.\n"
-            )
-            print(output)
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 return f.read()
 
         raise ModelRetry(

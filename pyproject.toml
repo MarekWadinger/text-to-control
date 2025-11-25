@@ -45,3 +45,28 @@ tag_format = "$version"
 version_scheme = "pep440"
 version_provider = "uv"
 update_changelog_on_bump = true
+
+[tool.ruff]
+line-length = 79
+target-version = "py312"
+
+[tool.ruff.lint]
+ignore = [
+    "E741",
+    "E722",
+    "N802",
+    "N803",
+    "F841",
+    "E402",
+    "E305",
+    "PLR1722",
+    "T201",
+    "PLR2004",
+    "F811",
+    "E302",
+    "N806",
+    "ANN001",
+    "ANN201",
+    "S101",
+]
+select = ["E", "F", "I", "UP"]
