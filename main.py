@@ -28,7 +28,7 @@ async def main():
         with logfire.span("expert"):
             expert = ExpertAgent().agent
             optimization_prompt = open(
-                "examples/allocation_problem.txt", "r", encoding="utf-8"
+                "examples/allocation_problem.txt", encoding="utf-8"
             ).read()
 
             while True:
@@ -45,21 +45,22 @@ async def main():
                     for question in expert_output.clarification_questions:
                         logfire.info(" -", question)
                     user_input = input(
-                        "\nProvide clarifications to the Expert Agent and press Enter to continue: "
+                        (
+                            "\nProvide clarifications to the Expert Agent ",
+                            "and press Enter to continue: ",
+                        )
                     )
                     optimization_prompt += f"\nClarifications: {user_input}\n"
 
         # --- Integrator step ---
         with logfire.span("integrator"):
             integrator = IntegratorAgent().agent
-            deps_integrator = IntegratorDeps(
-                reformulated_text=expert_output.reformulated_problem,
-                expert_assumptions=expert_output.assumptions,
-            )
+            deps_integrator = IntegratorDeps(**expert_output.model_dump())
 
             expert_prompt = f"""
         You are the Integrator Agent.
-        Your task is to write a runnable Pyomo model that **exactly** implements this problem:
+        Your task is to write a runnable Pyomo model that **exactly**
+        implements this problem:
 
         {expert_output.reformulated_problem}
 
