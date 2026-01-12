@@ -16,8 +16,7 @@ def test_main_help_smoke() -> None:
     try:
         result = subprocess.run(
             [sys.executable, str(script_path), "--help"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             check=False,
             timeout=10,
             text=True,
