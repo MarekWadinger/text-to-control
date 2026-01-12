@@ -1,4 +1,4 @@
-from agents import (
+from .agents import (
     ExpertAgent,
     ExpertDeps,
     ExpertOutput,
@@ -21,4 +21,3 @@ __all__ = [
     "ValidatorDeps",
     "ValidatorOutput",
 ]
-# This file re-exports classes and functions from agents_core for easier access.

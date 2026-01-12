@@ -1,0 +1,28 @@
+We want to tune a PID controller for a SISO plant to track a unit step with minimal error and limited control effort.
+
+Plant (continuous-time):
+G(s) = 1 / (s (s + 1))
+
+Controller:
+C(s) = Kp + Ki/s + Kd s
+
+Decision variables:
+Kp ≥ 0, Ki ≥ 0, Kd ≥ 0  (bounds not yet specified)
+
+Performance objective (to minimize):
+J = ∫_0^T [ w_e * |e(t)| + w_u * u(t)^2 ] dt
+where e(t) is tracking error, u(t) is control signal, and T is the evaluation horizon.
+
+Constraints (desired but not fully specified):
+- Maximum overshoot of the output ≤ M% (percent)
+- Settling time Ts ≤ S seconds (2% criterion)
+- Control effort bound |u(t)| ≤ Umax
+- Closed-loop stability (all poles in LHP)
+
+Notes:
+- Use a unit step reference r(t) = 1.
+- Sampling time or simulation step not specified (can be continuous simulation).
+- We didn't specify weights (w_e, w_u), horizon T, or numeric limits (M, S, Umax).
+
+Goal:
+Find Kp, Ki, Kd to minimize J subject to the constraints above.

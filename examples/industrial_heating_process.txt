@@ -1,0 +1,55 @@
+A thermal control engineer is designing a temperature control system for an industrial heating process.
+The goal is to automatically maintain the desired temperature in a large furnace using a PID controller,
+so that the temperature reaches the target value quickly, without overshooting or oscillations,
+and remains stable during operation.
+
+System description:
+
+The heating system can be modeled by the transfer function:
+G(s) = 1 / (s² + 3s + 2)
+where the input is the heater power and the output is the furnace temperature.
+
+The PID controller adjusts the heater power according to the difference between
+the desired and actual temperature:
+C(s) = Kp + Ki/s + Kd·s
+
+Available parameters to tune:
+
+Kp — proportional gain (determines how strongly the controller reacts to error)
+
+Ki — integral gain (eliminates steady-state error)
+
+Kd — derivative gain (improves response speed and stability)
+
+Performance goal:
+
+The objective is to minimize the total temperature error over time,
+measured using the Integral of Absolute Error (IAE) or
+the Integral of Time-weighted Absolute Error (ITAE).
+
+The system should quickly reach the desired temperature and remain stable with minimal oscillations.
+
+Constraints:
+
+All controller parameters must be non-negative (Kp, Ki, Kd ≥ 0).
+
+The closed-loop system must remain stable (no sustained oscillations or divergence).
+
+The temperature overshoot must not exceed 10% of the setpoint.
+
+The settling time (time to reach steady state) must be less than 5 seconds.
+
+Objective:
+
+Find the optimal values of Kp, Ki, and Kd that minimize the total temperature control error,
+while ensuring the furnace temperature response is stable, fast, and accurate.
+
+Expected results:
+
+Optimal controller gains: Kp*, Ki*, Kd*
+
+Minimum error value (IAE or ITAE)
+
+Step response of the furnace temperature showing minimal overshoot and fast stabilization
+
+Confirmation of closed-loop stability (phase and gain margins)

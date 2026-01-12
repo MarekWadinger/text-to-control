@@ -1,0 +1,16 @@
+A company is planning to distribute its limited resources among four projects: P1, P2, P3, and P4.
+Each project brings a certain profit depending on how many resources are assigned to it.
+However, every project also requires a specific amount of labor, capital, and material.
+
+The company has only a limited amount of resources available:
+- Labor: 40 workers
+- Capital: €4,000
+- Material: 70 kilograms
+
+Each project has the following characteristics:
+- Project P1 provides a profit of €50 per unit and requires 3 workers, €200 of capital, and 5 kg of material per unit.
+- Project P2 provides a profit of €80 per unit and requires 4 workers, €400 of capital, and 8 kg of material per unit.
+- Project P3 provides a profit of €65 per unit and requires 5 workers, €300 of capital, and 6 kg of material per unit.
+- Project P4 provides a profit of €70 per unit and requires 2 workers, €500 of capital, and 9 kg of material per unit.
+
+The goal of the company is to determine how many units of each project should be carried out in order to achieve the maximum total profit, while ensuring that the available limits of labor, capital, and material are not exceeded.

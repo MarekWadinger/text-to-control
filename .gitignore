@@ -164,3 +164,6 @@ Desktop.ini
 
 # Linux
 *~
+
+# Temporary files
+*.sqlite
