@@ -6,6 +6,7 @@ import shutil
 import tempfile
 from typing import Any
 
+import google.genai.errors
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.providers.google import GoogleProvider
 
@@ -14,7 +15,51 @@ from config import Settings
 # --- Model setup ---
 settings = Settings()
 provider = GoogleProvider(api_key=settings.gemini_api_key)
-model = GoogleModel("gemini-flash-lite-latest", provider=provider)
+
+MODEL_PRIORITY = [
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash",
+    "gemini-3-flash-preview",
+    "gemini-3-pro-preview",
+]
+
+
+class GeminiFallbackModel(GoogleModel):
+    """GoogleModel wrapper with automatic fallback on quota exhaustion."""
+
+    def __init__(self, model_names, provider):
+        self.model_names = model_names
+        self.current_index = 0
+        self.provider = provider
+        # initialize the first model
+        super().__init__(model_names[self.current_index], provider=provider)
+
+    async def request(
+        self, messages, model_settings=None, model_request_parameters=None
+    ):
+        while self.current_index < len(self.model_names):
+            try:
+                return await super().request(
+                    messages, model_settings, model_request_parameters
+                )
+            except google.genai.errors.ClientError as e:
+                if e.code == 429:
+                    print(
+                        f"Model {self.model_names[self.current_index]} quota exhausted, switching to next..."
+                    )
+                    self.current_index += 1
+                    if self.current_index < len(self.model_names):
+                        self._model_name = self.model_names[self.current_index]
+                        continue
+                    else:
+                        raise RuntimeError(
+                            "All Gemini models exhausted, please try again later."
+                        )
+                else:
+                    raise
+
+
+model = GeminiFallbackModel(MODEL_PRIORITY, provider)
 
 
 def safe_execute_python_code(code: str) -> dict[str, Any]:
