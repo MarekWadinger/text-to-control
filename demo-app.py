@@ -9,10 +9,6 @@ from app.backend_interface import run_pipeline
 # --- Setup ---
 st.set_page_config(page_title="Optimo.ai", page_icon="🔮", layout="wide")
 
-# Load CSS
-with open("app/stylesheet.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
 # Initialize API key in session state if not present
 if "api_key" not in st.session_state:
     st.session_state.api_key = ""
