@@ -18,7 +18,7 @@ logfire.instrument_pydantic_ai()
 
 
 async def main():
-    """Run the Expert → Integrator → Validator pipeline asynchronously."""
+    """Run the Expert → Integrator → Validator pipeline"""
     with logfire.span("run"):
         logfire.info(
             "\n Starting Expert → Integrator → Validator pipeline...\n"
@@ -28,7 +28,7 @@ async def main():
         with logfire.span("expert"):
             expert = ExpertAgent().agent
             optimization_prompt = open(
-                "examples/allocation_problem.txt", encoding="utf-8"
+                "examples/pid_1.txt", encoding="utf-8"
             ).read()
 
             while True:
@@ -43,7 +43,8 @@ async def main():
                 else:
                     logfire.info("\n Expert Agent requested clarification:\n")
                     for question in expert_output.clarification_questions:
-                        logfire.info(" -", question)
+                        logfire.info(f" - {question}")
+
                     user_input = input(
                         (
                             "\nProvide clarifications to the Expert Agent ",
@@ -68,7 +69,7 @@ async def main():
         {expert_output.assumptions}
         """
 
-            logfire.info("\n Generating executable Pyomo model code...\n")
+            logfire.info("\n Generating executable model code...\n")
             integrator_result = await integrator.run(
                 expert_prompt, deps=deps_integrator
             )
@@ -79,7 +80,7 @@ async def main():
                 else output.strip()
             )
 
-            logfire.info("Generated Pyomo Code Preview:\n")
+            logfire.info("Generated Code Preview:\n")
             logfire.info(f"{pyomo_code[:800]}...\n")
 
             with open("generated_code.py", "w", encoding="utf-8") as f:
@@ -97,14 +98,20 @@ async def main():
 
             logfire.info("\n Validation Results:\n")
             logfire.info(f"Success: {validation_output.success}")
-            logfire.info(f"Error: {validation_output.error}")
+            if validation_output.error:
+                logfire.info(f"Error: {validation_output.error}")
             logfire.info("\n--- Solver Output ---\n")
-            logfire.info(validation_output.stdout)
+            if validation_output.stdout is not None:
+                logfire.info(validation_output.stdout)
             logfire.info("----------------------")
-            logfire.info(f"Objective Name: {validation_output.objective_name}")
-            logfire.info(
-                f"Objective Value: {validation_output.objective_value}"
-            )
+            if validation_output.objective_name:
+                logfire.info(
+                    f"Objective Name: {validation_output.objective_name}"
+                )
+            if validation_output.objective_value is not None:
+                logfire.info(
+                    f"Objective Value: {validation_output.objective_value}"
+                )
             logfire.info("\n Pipeline completed successfully!\n")
 
 
