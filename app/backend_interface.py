@@ -3,7 +3,7 @@ import asyncio
 from main_app import main as async_main
 
 
-def run_pipeline(prompt: str) -> str:
+def run_pipeline(prompt: str, api_key: str = None) -> str:
     """Pomoc ."""
     try:
         loop = asyncio.get_event_loop()
@@ -13,7 +13,9 @@ def run_pipeline(prompt: str) -> str:
 
     if loop.is_running():
         # Použijeme thread-safe future a počkáme na výsledok
-        future = asyncio.run_coroutine_threadsafe(async_main(prompt), loop)
+        future = asyncio.run_coroutine_threadsafe(
+            async_main(prompt, api_key), loop
+        )
         return future.result()
     else:
-        return loop.run_until_complete(async_main(prompt))
+        return loop.run_until_complete(async_main(prompt, api_key))

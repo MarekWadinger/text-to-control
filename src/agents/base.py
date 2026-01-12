@@ -14,7 +14,8 @@ from config import Settings
 
 # --- Model setup ---
 settings = Settings()
-provider = GoogleProvider(api_key=settings.gemini_api_key)
+# Default provider using env/config
+default_provider = GoogleProvider(api_key=settings.gemini_api_key)
 
 MODEL_PRIORITY = [
     "gemini-2.5-flash-lite",
@@ -59,7 +60,14 @@ class GeminiFallbackModel(GoogleModel):
                     raise
 
 
-model = GeminiFallbackModel(MODEL_PRIORITY, provider)
+# Default model instance (using system key)
+def get_model(api_key: str = None):
+    if not api_key:
+        return GeminiFallbackModel(MODEL_PRIORITY, default_provider)
+    else:
+        return GeminiFallbackModel(
+            MODEL_PRIORITY, GoogleProvider(api_key=api_key)
+        )
 
 
 def safe_execute_python_code(code: str) -> dict[str, Any]:

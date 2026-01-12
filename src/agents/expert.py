@@ -4,7 +4,7 @@ from enum import Enum
 from pydantic import BaseModel
 from pydantic_ai import Agent
 
-from .base import model
+from .base import get_model
 
 
 @dataclass
@@ -41,11 +41,11 @@ with open("src/instructions/expert.md") as f:
 class ExpertAgent:
     """Reformulate user optimization problems into structured form."""
 
-    def __init__(self):
+    def __init__(self, api_key: str = None):
         self.agent = Agent(
-            model,
+            model=get_model(api_key),
             deps_type=ExpertDeps,
             output_type=[ExpertOutput, ExpertInquiry],
-            retries=3,
             instructions=expert_instructions,
+            retries=3,
         )
