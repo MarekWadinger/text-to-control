@@ -9,12 +9,16 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "control>=0.10.2",
     "cyipopt>=1.6.1",
     "logfire>=4.13.2",
+    "numpy>=2.3.4",
     "pydantic-ai-slim[google]>=1.0.15",
     "pydantic-settings>=2.11.0",
     "pyomo>=6.9.4",
     "rich>=14.2.0",
+    "scipy>=1.16.3",
+    "streamlit>=1.52.2",
 ]
 
 [dependency-groups]
@@ -52,6 +56,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 ignore = [
+    "E501",
     "E741",
     "E722",
     "N802",
