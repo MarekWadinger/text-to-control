@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import ModelRetry
 
-from .base import model
+from .base import get_model
 from .expert import ProblemType
 
 
@@ -74,12 +74,12 @@ def code_no_msglev_check(code: str) -> str:
 class IntegratorAgent:
     """Generate runnable code from the ExpertAgent's reformulated problem."""
 
-    def __init__(self):
+    def __init__(self, api_key: str = None):
         """Create the Integrator configured to generate and validate code."""
         self.agent = Agent[None, str | IntegratorOutput](
-            model,
+            model=get_model(api_key),
             deps_type=IntegratorDeps,
             output_type=[ruff_check, IntegratorOutput],
-            retries=3,
             instructions=integrator_instructions,
+            retries=3,
         )

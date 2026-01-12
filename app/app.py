@@ -1,10 +1,10 @@
-import streamlit as st
+import base64
+import os
 import time
 from functools import wraps
-from backend_interface import run_pipeline
-import os
-import base64
 
+import streamlit as st
+from backend_interface import run_pipeline
 
 # Page config
 

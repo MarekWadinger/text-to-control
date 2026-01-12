@@ -17,7 +17,8 @@ dependencies = [
     "pyomo>=6.9.4",
     "rich>=14.2.0",
     "scipy>=1.16.3",
-    "streamlit>=1.52.2",
+    "streamlit[auth]>=1.52.2",
+    "st-gsheets-connection>=0.0.4",
 ]
 
 [dependency-groups]
