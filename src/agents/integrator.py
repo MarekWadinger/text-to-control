@@ -21,7 +21,7 @@ class IntegratorDeps:
 
 
 class IntegratorOutput(BaseModel):
-    """Output schema for the IntegratorAgent — generated Python/Pyomo code."""
+    """Output of the IntegratorAgent."""
 
     code: str
 
@@ -60,15 +60,6 @@ def ruff_check(code: str) -> str:
     finally:
         if os.path.exists(path):
             os.remove(path)
-
-
-def code_no_msglev_check(code: str) -> str:
-    """Run check to verify that the code does not contain the msglev option."""
-    if "--msglev" in code:
-        raise ModelRetry(
-            "The code contains the msglev option, which is prohibited."
-        )
-    return code
 
 
 def code_no_msglev_check(code: str) -> str:
