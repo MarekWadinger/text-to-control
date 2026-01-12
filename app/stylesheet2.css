@@ -1,0 +1,16 @@
+.card.info-card {
+    background: linear-gradient(-45deg, #f9e79f, #f7dc6f, #f4d03f, #f1c40f);
+    color: #4b3429;
+    padding: 1.5rem;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card.info-card h2 {
+    font-size: 3rem;
+    line-height: 1.6;
+    font-weight: 700;
+    color: #4b3429;
+}

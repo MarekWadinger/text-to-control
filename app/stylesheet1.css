@@ -1,0 +1,15 @@
+.card.login-card {
+    background: linear-gradient(-45deg, #f7dc6f, #f4d03f, #f1c40f, #f9e79f);
+    color: #4b3429;
+    padding: 1.5rem;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card.login-card h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}

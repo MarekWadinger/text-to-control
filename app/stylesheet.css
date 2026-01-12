@@ -1,0 +1,123 @@
+.stApp {
+    background: #ffffff;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.card {
+    background: linear-gradient(-45deg, #f4d03f, #f1c40f, #f7dc6f, #f9e79f);
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    margin-bottom: 25px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 1.2s ease;
+    opacity: 0;
+    animation: fadeIn 1s forwards;
+}
+
+.card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+div.stButton>button {
+    background-color: #e9a136;
+    color: #4b3429;
+    border-radius: 12px;
+    height: 3rem;
+    font-size: 1rem;
+    width: 100%;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+div.stButton>button:hover {
+    background-color: #e8ac4d;
+    color: #4b3429;
+    transform: scale(1.05);
+}
+
+textarea,
+input[type="text"],
+input[type="password"] {
+    background-color: white !important;
+    color: black !important;
+    border-radius: 10px;
+    padding: 10px;
+    width: 100%;
+    border: 1px solid #dab019;
+}
+
+.hero {
+    background: linear-gradient(-45deg, #f4d03f, #f1c40f, #f7dc6f, #f9e79f);
+    background-size: 400% 400%;
+    color: #4b3429;
+    padding: 3rem;
+    border-radius: 20px;
+    text-align: center;
+    margin-bottom: 2rem;
+    animation: gradientBG 15s ease infinite, fadeIn 1s forwards;
+}
+
+.big-title {
+    font-size: 4rem;
+    font-weight: 700;
+    color: #edb43a;
+    text-align: center;
+    margin-bottom: 1rem;
+    opacity: 0;
+    animation: fadeIn 1s forwards;
+}
+
+.signup-hero {
+    background: linear-gradient(-45deg, #f4d03f, #f1c40f, #f7dc6f, #f9e79f);
+    background-size: 400% 400%;
+    color: #4b3429;
+    padding: 2.5rem 2rem;
+    border-radius: 20px;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-weight: 700;
+    animation: gradientBG 15s ease infinite, fadeIn 1s forwards;
+    font-size: 4rem;
+}
+
+.signup-hero p {
+    font-size: 1.2rem;
+    color: #4b3429;
+    font-weight: 500;
+    margin-top: 1rem;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes gradientBG {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+[data-testid="stSidebar"] {
+    background-color: #faf5ff;
+}
+
+ul {
+    padding-left: 1.2rem;
+}

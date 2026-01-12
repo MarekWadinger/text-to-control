@@ -1,9 +1,19 @@
 import asyncio
+
 from main_app import main as async_main
 
 
-def run_pipeline(prompt: str, log_callback=None):
-    """
-    Spustenie Expert → Integrator → Validator pipeline
-    """
-    return asyncio.run(async_main(prompt, log_callback=log_callback))
+def run_pipeline(prompt: str) -> str:
+    """Pomoc ."""
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    if loop.is_running():
+        # Použijeme thread-safe future a počkáme na výsledok
+        future = asyncio.run_coroutine_threadsafe(async_main(prompt), loop)
+        return future.result()
+    else:
+        return loop.run_until_complete(async_main(prompt))
