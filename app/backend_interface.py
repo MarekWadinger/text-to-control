@@ -13,9 +13,7 @@ def run_pipeline(prompt: str, api_key: str = None) -> str:
 
     if loop.is_running():
         # Použijeme thread-safe future a počkáme na výsledok
-        future = asyncio.run_coroutine_threadsafe(
-            async_main(prompt, api_key), loop
-        )
+        future = asyncio.run_coroutine_threadsafe(async_main(prompt), loop)
         return future.result()
     else:
-        return loop.run_until_complete(async_main(prompt, api_key))
+        return loop.run_until_complete(async_main(prompt))
