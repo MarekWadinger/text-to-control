@@ -43,6 +43,14 @@ def rate_limit(func):
     return wrapper
 
 
+def get_user_email() -> str | None:
+    """Return the logged-in user's email if available."""
+    if not (st.user.is_logged_in and hasattr(st.user, "email")):
+        return None
+    user_email = st.user.email
+    return user_email if isinstance(user_email, str) else None
+
+
 @rate_limit
 def run_backend(prompt_text):
     # Check usage before running
@@ -51,13 +59,14 @@ def run_backend(prompt_text):
     # Check if we have a valid key to use (either system or user provided)
     has_valid_access = False
 
-    if st.user.is_logged_in:
+    user_email = get_user_email()
+    if user_email:
         print("logged in")
         # Check if using free tier
         if st.session_state.api_key == system_key and system_key:
             # Re-verify free tier availability before execution
-            if check_can_use_free_tier(st.user.email):
-                mark_free_tier_used(st.user.email)
+            if check_can_use_free_tier(user_email):
+                mark_free_tier_used(user_email)
                 has_valid_access = True
             else:
                 # Should be caught by UI, but double check
@@ -74,7 +83,7 @@ def run_backend(prompt_text):
     if not has_valid_access:
         return "🔒 **Access Restricted**\nPlease log in or provide a Gemini API Key in the sidebar to proceed."
 
-    return run_pipeline(prompt_text, api_key=st.session_state.api_key)
+    return run_pipeline(prompt_text)
 
 
 # --- Sidebar Logic ---
@@ -114,9 +123,10 @@ with st.sidebar:
         st.markdown("---")
 
         system_key = st.secrets.get("GEMINI_API_KEY", "")
-        free_tier_available = hasattr(
-            st.user, "email"
-        ) and check_can_use_free_tier(st.user.email)
+        user_email = get_user_email()
+        free_tier_available = (
+            user_email is not None and check_can_use_free_tier(user_email)
+        )
 
         if free_tier_available:
             st.info("✅ **Daily Free Request Available**")

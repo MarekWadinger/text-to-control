@@ -61,7 +61,7 @@ class GeminiFallbackModel(GoogleModel):
 
 
 # Default model instance (using system key)
-def get_model(api_key: str = None):
+def get_model(api_key: str | None = None):
     if not api_key:
         return GeminiFallbackModel(MODEL_PRIORITY, default_provider)
     else:

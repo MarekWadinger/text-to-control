@@ -41,8 +41,8 @@ with open("src/instructions/expert.md") as f:
 class ExpertAgent:
     """Reformulate user optimization problems into structured form."""
 
-    def __init__(self, api_key: str = None):
-        self.agent = Agent(
+    def __init__(self, api_key: str | None = None):
+        self.agent: Agent[ExpertDeps, ExpertOutput | ExpertInquiry] = Agent(
             model=get_model(api_key),
             deps_type=ExpertDeps,
             output_type=[ExpertOutput, ExpertInquiry],

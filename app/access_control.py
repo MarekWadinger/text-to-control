@@ -14,7 +14,7 @@ def get_usage_df(conn):
         return pd.DataFrame(columns=["email", "last_used_date"])
 
 
-def check_can_use_free_tier(email: str) -> bool:
+def check_can_use_free_tier(email: str | None) -> bool:
     """Check whether the user used their free request today."""
     if not email:
         return False
@@ -49,7 +49,7 @@ def check_can_use_free_tier(email: str) -> bool:
         return False
 
 
-def mark_free_tier_used(email: str):
+def mark_free_tier_used(email: str | None):
     """Record whether the user used their free request today."""
     if not email:
         return
@@ -72,4 +72,4 @@ def mark_free_tier_used(email: str):
         conn.update(worksheet="UsageLog", data=df)
 
     except Exception as e:
-        print(f"Error marking free tier used: {e.message}")
+        print(f"Error marking free tier used: {e}")

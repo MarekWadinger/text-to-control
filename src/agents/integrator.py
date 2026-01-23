@@ -74,9 +74,9 @@ def code_no_msglev_check(code: str) -> str:
 class IntegratorAgent:
     """Generate runnable code from the ExpertAgent's reformulated problem."""
 
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: str | None = None):
         """Create the Integrator configured to generate and validate code."""
-        self.agent = Agent[None, str | IntegratorOutput](
+        self.agent: Agent[IntegratorDeps, str | IntegratorOutput] = Agent(
             model=get_model(api_key),
             deps_type=IntegratorDeps,
             output_type=[ruff_check, IntegratorOutput],

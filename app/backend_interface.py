@@ -3,7 +3,7 @@ import asyncio
 from main_app import main as async_main
 
 
-def run_pipeline(prompt: str, api_key: str = None) -> str:
+def run_pipeline(prompt: str) -> str:
     """Pomoc ."""
     try:
         loop = asyncio.get_event_loop()

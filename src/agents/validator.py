@@ -29,8 +29,8 @@ with open("src/instructions/validator.md") as f:
 class ValidatorAgent:
     """Execute and validate Pyomo models in sandbox."""
 
-    def __init__(self, api_key: str = None):
-        self.agent = Agent(
+    def __init__(self, api_key: str | None = None):
+        self.agent: Agent[ValidatorDeps, ValidatorOutput] = Agent(
             model=get_model(api_key),
             deps_type=ValidatorDeps,
             output_type=ValidatorOutput,

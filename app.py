@@ -83,8 +83,8 @@ def rate_limit(func):
 
 
 @rate_limit
-def run_backend(prompt_text, log_callback=None):
-    return run_pipeline(prompt_text, log_callback=log_callback)
+def run_backend(prompt_text):
+    return run_pipeline(prompt_text)
 
 
 # CSS

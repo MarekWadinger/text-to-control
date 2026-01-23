@@ -19,6 +19,8 @@ dependencies = [
     "scipy>=1.16.3",
     "streamlit[auth]>=1.52.2",
     "st-gsheets-connection>=0.0.4",
+    "pandas-stubs>=2.3.3.260113",
+    "types-requests>=2.32.4.20260107",
 ]
 
 [dependency-groups]
