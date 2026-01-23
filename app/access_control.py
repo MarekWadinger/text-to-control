@@ -15,9 +15,12 @@ def get_usage_df(conn):
 
 
 def check_can_use_free_tier(email: str) -> bool:
-    """Returns True if user has not used their daily free request."""
+    """Check whether the user used their free request today."""
     if not email:
         return False
+
+    if email in st.secrets.auth.admin_emails:
+        return True
 
     try:
         conn = st.connection("gsheets", type=GSheetsConnection)
@@ -37,18 +40,17 @@ def check_can_use_free_tier(email: str) -> bool:
             ).date()
             return last_date < date.today()
         except (ValueError, TypeError):
-            # If date format is wrong, assume they can use it (fail open)
-            return True
+            # If date format is wrong, assume they used it (fail closed)
+            return False
 
     except Exception as e:
-        # If connection fails (e.g. no secrets set up), log error and fail open or closed?
-        # Failing open (True) is friendlier for development if secrets are missing
+        # If connection fails (e.g. no secrets set up), log error and fail closed
         print(f"Error checking free tier: {e}")
-        return True
+        return False
 
 
 def mark_free_tier_used(email: str):
-    """Records that the user used their free request today."""
+    """Record whether the user used their free request today."""
     if not email:
         return
 
