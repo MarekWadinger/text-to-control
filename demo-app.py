@@ -114,7 +114,9 @@ with st.sidebar:
         st.markdown("---")
 
         system_key = st.secrets.get("GEMINI_API_KEY", "")
-        free_tier_available = check_can_use_free_tier(st.user.email)
+        free_tier_available = hasattr(
+            st.user, "email"
+        ) and check_can_use_free_tier(st.user.email)
 
         if free_tier_available:
             st.info("✅ **Daily Free Request Available**")
@@ -304,7 +306,7 @@ if prompt := st.chat_input(
                 or "MALFORMED_FUNCTION_CALL" in response
                 or response.strip() == ""
             ):
-                response = "Oops, that didn’t work. Try again."
+                response = "Oops, that didn't work. Try again."
         except RuntimeError as e:
             response = f"Clarification needed:\n{str(e)}"
             st.session_state.awaiting_clarification = True
@@ -324,7 +326,7 @@ if prompt := st.chat_input(
                 else:
                     response = "Oops, something went wrong with the AI service. Try again later."
             else:
-                response = "Oops, that didn’t work. Try again."
+                response = "Oops, that didn't work. Try again."
                 # Log for debugging
                 print(f"Error in pipeline: {e}")
 
