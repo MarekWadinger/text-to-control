@@ -5,7 +5,7 @@ description = "Agent-based framework for automated control system design"
 readme = "README.md"
 authors = [
     { name = "Marek Wadinger", email = "marekwadinger5506@gmail.com" },
-    { name = "Adriána Bartková", email = "adrianka.bartkova48@gmail.com" }
+    { name = "Adriána Bartková", email = "adrianka.bartkova48@gmail.com" },
 ]
 requires-python = ">=3.12"
 dependencies = [
@@ -22,26 +22,12 @@ dependencies = [
 ]
 
 [dependency-groups]
-app = [
-    "fastapi>=0.119.0",
-    "uvicorn>=0.37.0",
-]
-dev = [
-    "commitizen>=4.9.1",
-    "pre-commit>=4.3.0",
-    "pytest>=8.4.2",
-    "pytest-cov>=7.0.0",
-    "ruff>=0.13.1",
-    "ty>=0.0.1a21",
-]
-lint = [
-    "ruff>=0.13.1",
-    "ty>=0.0.1a21",
-]
-test = [
-    "pytest>=8.4.2",
-    "pytest-cov>=7.0.0",
-]
+app = ["fastapi>=0.119.0", "uvicorn>=0.37.0"]
+dev = ["commitizen>=4.9.1", "pre-commit>=3.0.0"]
+lint = ["ty>=0.0.1a21"]
+test = ["pytest>=8.0.0", "pytest-cov>=4.0.0"]
+security = ["bandit>=1.7.0"]
+format = ["ruff>=0.13.3"]
 
 [tool.commitizen]
 name = "cz_conventional_commits"
