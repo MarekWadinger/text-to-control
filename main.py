@@ -1,3 +1,5 @@
+"""Run the Expert → Integrator → Validator pipeline."""
+
 import anyio
 import logfire
 
@@ -8,6 +10,7 @@ from src.agents import (
     ExpertOutput,
     IntegratorAgent,
     IntegratorDeps,
+    IntegratorOutput,
     ValidatorAgent,
     ValidatorDeps,
 )
@@ -18,7 +21,7 @@ logfire.instrument_pydantic_ai()
 
 
 async def main():
-    """Run the Expert → Integrator → Validator pipeline"""
+    """Run the Expert → Integrator → Validator pipeline."""
     with logfire.span("run"):
         logfire.info(
             "\n Starting Expert → Integrator → Validator pipeline...\n"
@@ -53,10 +56,17 @@ async def main():
                     )
                     optimization_prompt += f"\nClarifications: {user_input}\n"
 
+        if not isinstance(expert_output, ExpertOutput):
+            raise RuntimeError("Expert agent response was not finalized.")
+
         # --- Integrator step ---
         with logfire.span("integrator"):
             integrator = IntegratorAgent().agent
-            deps_integrator = IntegratorDeps(**expert_output.model_dump())
+            deps_integrator = IntegratorDeps(
+                reformulated_problem=expert_output.reformulated_problem,
+                problem_type=expert_output.problem_type,
+                assumptions=expert_output.assumptions,
+            )
 
             expert_prompt = f"""
         You are the Integrator Agent.
@@ -74,11 +84,10 @@ async def main():
                 expert_prompt, deps=deps_integrator
             )
             output = integrator_result.output
-            pyomo_code = (
-                output.code.strip()
-                if hasattr(output, "code")
-                else output.strip()
-            )
+            if isinstance(output, IntegratorOutput):
+                pyomo_code = output.code.strip()
+            else:
+                pyomo_code = str(output).strip()
 
             logfire.info("Generated Code Preview:\n")
             logfire.info(f"{pyomo_code[:800]}...\n")

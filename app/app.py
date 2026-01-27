@@ -1,10 +1,11 @@
-import streamlit as st
+import base64
+import os
 import time
 from functools import wraps
-from backend_interface import run_pipeline
-import os
-import base64
 
+import streamlit as st
+
+from .backend_interface import run_pipeline
 
 # Page config
 
@@ -60,8 +61,8 @@ def rate_limit(func):
 
 
 @rate_limit
-def run_backend(prompt_text, log_callback=None):
-    return run_pipeline(prompt_text, log_callback=log_callback)
+def run_backend(prompt_text):
+    return run_pipeline(prompt_text)
 
 
 # CSS
@@ -345,32 +346,11 @@ def show_main():
 
     # --- Pipeline runner ---
     def _run_pipeline(prompt):
-        placeholder = st.empty()  # miesto pre dynamické logy
         logs = []
-
-        # callback pre logy z main.py
-        def log_callback(msg):
-            msg = msg.strip()
-            if msg:
-                logs.append(msg)
-                # dynamické zobrazenie posledných logov + chat
-                html = ""
-                for m in st.session_state.messages[-20:]:
-                    cls = (
-                        "bubble-assistant"
-                        if m["role"] == "assistant"
-                        else "bubble-user"
-                    )
-                    html += f'<div class="{cls}">{m["content"]}</div>'
-                for log_msg in logs[-5:]:
-                    html += (
-                        f'<div class="bubble bubble-assistant">{log_msg}</div>'
-                    )
-                placeholder.markdown(html, unsafe_allow_html=True)
 
         try:
             # spustenie pipeline
-            final_msg = run_pipeline(prompt, log_callback=log_callback)
+            final_msg = run_pipeline(prompt)
             # pridáme finálnu správu iba raz
             st.session_state.messages.append(
                 {"role": "assistant", "content": final_msg, "final": True}

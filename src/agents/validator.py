@@ -4,7 +4,7 @@ from typing import Any
 from pydantic import BaseModel
 from pydantic_ai import Agent, RunContext
 
-from .base import model, safe_execute_python_code
+from .base import get_model, safe_execute_python_code
 
 
 @dataclass
@@ -29,13 +29,13 @@ with open("src/instructions/validator.md") as f:
 class ValidatorAgent:
     """Execute and validate Pyomo models in sandbox."""
 
-    def __init__(self):
-        self.agent = Agent(
-            model,
+    def __init__(self, api_key: str | None = None):
+        self.agent: Agent[ValidatorDeps, ValidatorOutput] = Agent(
+            model=get_model(api_key),
             deps_type=ValidatorDeps,
             output_type=ValidatorOutput,
-            retries=3,
             instructions=validator_instructions,
+            retries=3,
         )
 
         @self.agent.tool()

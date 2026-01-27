@@ -7,6 +7,7 @@ from src.agents import (
     ExpertOutput,
     IntegratorAgent,
     IntegratorDeps,
+    IntegratorOutput,
     ValidatorAgent,
     ValidatorDeps,
 )
@@ -16,7 +17,7 @@ logfire.instrument_pydantic_ai()
 
 
 async def main(prompt: str):
-    """Expert → Integrator → Validator pipeline, vracia text na bublinu."""
+    """Run Expert → Integrator → Validator pipeline and return summary."""
     messages = []
 
     # --- Expert Step ---
@@ -38,9 +39,16 @@ async def main(prompt: str):
                 "\n".join(expert_output.clarification_questions)
             )
 
+    if not isinstance(expert_output, ExpertOutput):
+        raise RuntimeError("Expert agent response was not finalized.")
+
     # --- Integrator Step ---
     integrator = IntegratorAgent().agent
-    deps_integrator = IntegratorDeps(**expert_output.model_dump())
+    deps_integrator = IntegratorDeps(
+        reformulated_problem=expert_output.reformulated_problem,
+        problem_type=expert_output.problem_type,
+        assumptions=expert_output.assumptions,
+    )
     integrator_prompt = f"""
 You are the Integrator Agent.
 Write a runnable Pyomo model for:
@@ -54,9 +62,10 @@ Assumptions:
         integrator_prompt, deps=deps_integrator
     )
     output = integrator_result.output
-    pyomo_code = (
-        output.code.strip() if hasattr(output, "code") else output.strip()
-    )
+    if isinstance(output, IntegratorOutput):
+        pyomo_code = output.code.strip()
+    else:
+        pyomo_code = str(output).strip()
 
     with open("generated_code.py", "w", encoding="utf-8") as f:
         f.write(pyomo_code)
