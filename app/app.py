@@ -1,19 +1,15 @@
-import base64
-import os
 import time
 from functools import wraps
 
 import streamlit as st
-
-from .backend_interface import run_pipeline
+from auth_demo import handle_demo_login
+from backend_interface import run_pipeline
 
 # Page config
-
 st.set_page_config(page_title="Optimo.ai", page_icon="🔮", layout="wide")
 
 
 # Session state
-
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 if "username" not in st.session_state:
@@ -27,7 +23,6 @@ if "page" not in st.session_state:
 
 
 # Chat state
-
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "chat_started" not in st.session_state:
@@ -38,12 +33,38 @@ if "selected_suggestion" not in st.session_state:
     st.session_state.selected_suggestion = None
 
 RATE_LIMIT_SECONDS = 3
-VALID_USERS = {"user1": "password1", "user2": "password2"}
+VALID_USERS = {
+    "user1": "password1",
+    "user2": "password2",
+}
+
+
+def login_callback(username, password):
+    # ---------------- DEMO ACCOUNT ----------------
+    if username == "user1" and password == "password1":
+        success = handle_demo_login()
+
+        if success:
+            st.session_state.page = "main"
+            st.info("✅ Demo access granted!")
+        else:
+            st.info("⚠️ Demo version: access is allowed only once.")
+        return
+
+    # ---------------- REGISTERED USERS ----------------
+    if VALID_USERS.get(username) == password:
+        st.session_state.authenticated = True
+        st.session_state.username = username
+        st.success("Login successful!")
+        time.sleep(1.5)
+        st.session_state.page = "main"
+        return
+
+    # ---------------- INVALID LOGIN ----------------
+    st.error("❌ Invalid username or password")
 
 
 # Rate limiting
-
-
 def rate_limit(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -66,42 +87,14 @@ def run_backend(prompt_text):
 
 
 # CSS
-
-st.markdown(
-    """<style>
-.stApp { background: #bfbfbf; font-family: 'Segoe UI', sans-serif; }
-.card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 25px; transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 1.2s ease; opacity:0; animation: fadeIn 1s forwards;}
-.card:hover { transform: scale(1.05); box-shadow: 0 15px 30px rgba(0,0,0,0.2);}
-div.stButton > button { background-color: #8b5cf6; color: white; border-radius: 12px; height: 3rem; font-size: 1rem; width: 100%; font-weight:600; transition:0.3s;}
-div.stButton > button:hover { background-color: #a78bfa; color: white; transform:scale(1.05);}
-textarea, input[type="text"], input[type="password"] { background-color: white !important; color: black !important; border-radius: 10px; padding: 10px; width: 100%; border: 1px solid #ccc;}
-.hero { background: linear-gradient(-45deg, #c4b5fd, #7c3aed, #d8b4fe, #a78bfa); background-size: 400% 400%; color: white; padding: 3rem; border-radius: 20px; text-align:center; margin-bottom:2rem; animation: gradientBG 15s ease infinite, fadeIn 1s forwards;}
-.big-title { font-size: 4rem; font-weight: 700; color: #7c3aed; text-align: center; margin-bottom: 1rem; opacity:0; animation: fadeIn 1s forwards;}
-@keyframes fadeIn { 0% { opacity: 0; transform: translateY(20px);} 100% { opacity: 1; transform: translateY(0);}}
-@keyframes gradientBG {0% { background-position: 0% 50%; }50% { background-position: 100% 50%; }100% { background-position: 0% 50%; }}
-[data-testid="stSidebar"] { background-color: #faf5ff; }
-ul { padding-left:1.2rem; }
-</style>""",
-    unsafe_allow_html=True,
-)
-
+with open("app/stylesheet.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # Page callbacks
 
 
 def go_to_page(page_name):
     st.session_state.page = page_name
-
-
-def login_callback(username, password):
-    if VALID_USERS.get(username) == password:
-        st.session_state.authenticated = True
-        st.session_state.username = username
-        st.success("Login successful!")
-        time.sleep(1.5)
-        go_to_page("main")
-    else:
-        st.error("Invalid username or password")
 
 
 def logout_callback():
@@ -132,12 +125,23 @@ def show_welcome():
     )
     col1, col2 = st.columns([1, 1], gap="large")
     with col1:
+        with open("app/stylesheet1.css") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+        # Login card
         st.markdown(
-            """<div class='card' style='background: linear-gradient(135deg, #ede9fe, #c4b5fd); color: #5b21b6; padding: 1rem 1rem; border-radius: 15px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.1); max-width: 400px; min-height: 15px; margin: 0 auto; transition: transform 0.3s ease, box-shadow 0.3s ease;'><h2 style='font-size:1.6rem; font-weight:650; margin-bottom:1rem;'>Log In</h2></div>""",
+            """
+            <div class="card login-card">
+                <h2>Login</h2>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
+
         username = st.text_input("Username", key="login_user")
         password = st.text_input("Password", type="password", key="login_pass")
+
+        # Login button
         st.button(
             "Login",
             key="login_btn",
@@ -145,8 +149,14 @@ def show_welcome():
             args=(username, password),
         )
     with col2:
+        with open("app/stylesheet2.css") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
         st.markdown(
-            """<div class='card' style='background:linear-gradient(135deg, #ede9fe, #c4b5fd); color:#4b5563; text-align:center;'><h2 style='color:#5b21b6;'>Join Optimo Today!</h2><p>Unlock AI tools for optimization. Simple, fast, intuitive.</p></div>""",
+            """<div class='card info-card'>
+                    <h2>Join Optimo Today!</h2>
+                    <p>Unlock AI tools for optimization.<br>Simple, fast, intuitive.</p>
+               </div>""",
             unsafe_allow_html=True,
         )
         st.button(
@@ -157,14 +167,22 @@ def show_welcome():
 
 
 def show_signup():
+    with open("app/stylesheet1.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
     st.markdown(
-        """<div style='text-align:center; margin-bottom:2rem;'><h1 style='font-size:3.5rem; font-weight:700; color:#7c3aed;'>Create Your Account</h1><p style='font-size:1.2rem; color:#4b5563;'>Join Optimo for smarter decisions </p></div>""",
+        """
+        <div class='signup-hero' style="background: linear-gradient(-45deg, #f4d03f, #f1c40f, #f7dc6f, #f9e79f);">
+            Create Your Account
+            <p>Join Optimo for smarter decisions</p>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
     col1, col2 = st.columns([1, 1], gap="large")
     with col1:
         st.markdown(
-            "<h3 style='color:#5b21b6; text-align:center; margin-bottom:1rem;'>Registration</h3>",
+            "<h2 style='color:#4b3429; text-align:center; margin-bottom:2rem;'>Registration</h2>",
             unsafe_allow_html=True,
         )
         reg_username = st.text_input("Username", key="reg_user")
@@ -185,7 +203,17 @@ def show_signup():
         )
     with col2:
         st.markdown(
-            """<div class='card' style='background:linear-gradient(135deg, #ede9fe, #c4b5fd);'><h2 style='color:#5b21b6;'>Why Optimo?</h2><ul><li>💡 AI-driven optimization suggestions</li><li>⚡ Fast and intuitive interface</li><li>📈 Designed for professionals & students</li><li>🔒 Secure API access for your projects</li></ul></div>""",
+            """
+            <div class='card info-card'>
+                <h2>Why Optimo?</h2>
+                <ul>
+                    <li>💡 AI-driven optimization suggestions</li>
+                    <li>⚡ Fast and intuitive interface</li>
+                    <li>📈 Designed for professionals & students</li>
+                    <li>🔒 Secure API access for your projects</li>
+                </ul>
+            </div>
+            """,
             unsafe_allow_html=True,
         )
         st.button(
@@ -195,25 +223,121 @@ def show_signup():
         )
 
 
+# --- Initialize session variables ---
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "clarification_state" not in st.session_state:
+    st.session_state.clarification_state = False
+if "pipeline_prompt" not in st.session_state:
+    st.session_state.pipeline_prompt = ""
+
+
 def show_main():
-    import streamlit as st
+    # --- Initialize session state ---
+    st.session_state.setdefault("messages", [])
+    st.session_state.setdefault("pipeline_prompt", "")
+    st.session_state.setdefault("awaiting_clarification", False)
 
-    # Session init
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    if "awaiting_clarification" not in st.session_state:
-        st.session_state.awaiting_clarification = False
-    if "pipeline_prompt" not in st.session_state:
-        st.session_state.pipeline_prompt = ""
-    if "clarification_prompt" not in st.session_state:
-        st.session_state.clarification_prompt = ""
+    # HEADER
+    title_row = st.container(horizontal=True, vertical_alignment="bottom")
+    with title_row:
+        col1, col2, col3 = st.columns([1, 20, 3], vertical_alignment="bottom")
 
-    # Sidebar
+        with col1:
+            st.image("app/logo.png", width=48)
+
+        with col2:
+            st.markdown(
+                '<h1 style="color:#4b3429; margin:0;">OptimoAI assistant</h1>',
+                unsafe_allow_html=True,
+            )
+
+        with col3:
+            if st.button(" Reset Conversation"):
+                st.session_state.messages = []
+                st.session_state.pipeline_prompt = ""
+                st.session_state.awaiting_clarification = False
+                st.rerun()
+
+    # CSS
+    st.markdown(
+        """
+    <style>
+    /* Chat input */
+    div[data-testid="stChatInput"] {
+        border: 2px solid #dab019;
+        border-radius: 12px;
+        padding: 8px;
+        background-color: #fff9e5;
+        transition: all 0.3s ease;
+    }
+
+    div[data-testid="stChatInput"] textarea:focus {
+        outline: none;
+        box-shadow: 0 0 8px #FFD700;
+        border-color: #FFD700;
+    }
+
+    [data-testid="column"] img {
+        vertical-align: middle;
+    }
+    </style>
+    """,
+        unsafe_allow_html=True,
+    )
+
+    # ------------------------------------------------------------------
+    placeholder_container = st.empty()
+    if len(st.session_state.messages) == 0:
+        placeholder_container.markdown(
+            """
+        <div style="
+            text-align: center;
+            color: #4b3429;
+            font-size: 60px;
+            font-weight: bold;
+            margin-top: 30px;
+            padding: 3rem;
+            background: linear-gradient(-45deg, #f4d03f, #f1c40f, #f7dc6f, #f9e79f);
+            border-radius: 20px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            animation: gradientBG 15s ease infinite, fadeINforwards 1s forwards;
+            line-height: 1.1;
+        ">
+            What would you like to optimize?<br>
+            <span style="
+                font-size: 20px;
+                font-weight: normal;
+                color: #4b3429;
+                display: block;
+                line-height: 1;
+                margin-top: 0px;
+            ">
+                Ask &middot; Define &middot; Optimize
+            </span>
+        </div>
+
+        <style>
+        @keyframes gradientBG {
+            0% {background-position: 0% 50%;}
+            50% {background-position: 100% 50%;}
+            100% {background-position: 0% 50%;}
+        }
+        @keyframes fadeINforwards {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        </style>
+        """,
+            unsafe_allow_html=True,
+        )
+
+    # --- Sidebar ---
     with st.sidebar:
         st.markdown("## Optimo")
         st.caption("Multi-agent optimization assistant")
         st.divider()
-        st.markdown(f"👤 **{st.session_state.username}**")
+        st.markdown(f"👤 **{st.session_state.get('username', 'User')}**")
         st.button(
             "Logout",
             on_click=lambda: st.session_state.update(
@@ -223,178 +347,82 @@ def show_main():
                     "page": "logout_message",
                 }
             ),
+            key="logout_btn",
         )
 
-    # Base CSS
-    st.markdown(
-        """
-        <style>
-        .stApp {
-            background-color: #f5f5f7 !important;
-            font-family: 'Inter', sans-serif;
-            color: #1f2937;
-        }
+    # --- Display previous messages from history ---
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-        .header-container {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px 24px;
-            position: sticky;
-            top: 0;
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-            z-index: 10;
-        }
+    # --- Input ---
+    if prompt := st.chat_input(
+        "Provide clarifications…"
+        if st.session_state.awaiting_clarification
+        else "Ask Optimo…",
+        key="chat_input",
+    ):
+        st.session_state.messages.append({"role": "user", "content": prompt})
 
-        .header-container img {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-        }
+        placeholder_container.empty()
 
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 16px;
-            max-width: 800px;
-            margin: auto;
-        }
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-        .bubble {
-            padding: 14px 20px;
-            border-radius: 20px;
-            max-width: 70%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            line-height: 1.5;
-            font-size: 1rem;
-        }
-
-        .bubble-user { background: linear-gradient(135deg, #c4b5fd, #7c3aed); color:white; align-self:flex-end; }
-
-        .bubble-assistant { background:#ffffff; color:#1f2937; align-self:flex-start; }
-
-        .bubble-final { background:#e5e7eb; color:#1f2937; align-self:flex-start; font-family:monospace; white-space:pre-wrap; }
-
-        .typing {
-            font-style: italic;
-            color: #9ca3af;
-            margin-bottom: 8px;
-        }
-
-        .stChatInput {
-            border-top: 1px solid #e5e7eb;
-            padding: 12px 16px;
-            position: sticky;
-            bottom: 0;
-            background: #f5f5f7;
-            z-index: 5;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Header
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    logo_path = os.path.join(BASE_DIR, "bot_avatar.png")
-    logo_base64 = base64.b64encode(open(logo_path, "rb").read()).decode()
-
-    st.markdown(
-        f"""
-        <div class="header-container">
-            <img src="data:image/png;base64,{logo_base64}" />
-            <div>
-                <h2 style="margin:0; color:#7c3aed;">Optimo Assistant</h2>
-                <p style="margin:0; color:#6b7280; font-size:0.95rem;">Ask, refine and optimize decisions</p>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Chat container
-    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-
-    if not st.session_state.messages:
-        st.markdown(
-            """
-            <div style="text-align:center; margin-top:4rem;">
-                <h1 style="color:#7c3aed; font-size:2.5rem;">
-                    What would you like to optimize?
-                </h1>
-                <p style="color:#6b7280; font-size:1rem;">
-                    Constraints · Objectives · Trade-offs · Decisions
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    # Chat messages
-    for msg in st.session_state.messages:
-        cls = "bubble-user" if msg["role"] == "user" else "bubble-assistant"
-        if msg.get("final", False):
-            cls = "bubble-final"
-        st.markdown(
-            f'<div class="{cls}">{msg["content"]}</div>',
-            unsafe_allow_html=True,
-        )
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    # --- Pipeline runner ---
-    def _run_pipeline(prompt):
-        logs = []
-
-        try:
-            # spustenie pipeline
-            final_msg = run_pipeline(prompt)
-            # pridáme finálnu správu iba raz
-            st.session_state.messages.append(
-                {"role": "assistant", "content": final_msg, "final": True}
-            )
-            logs.clear()
-        except RuntimeError as e:
-            # Expert potrebuje klarifikáciu
-            st.session_state.awaiting_clarification = True
+        if st.session_state.awaiting_clarification:
+            full_prompt = f"{st.session_state.pipeline_prompt}\nClarifications:\n{prompt}"
+            st.session_state.awaiting_clarification = False
+        else:
+            full_prompt = prompt
             st.session_state.pipeline_prompt = prompt
-            st.session_state.clarification_prompt = str(e)
 
-    # --- Chat input ---
-    if st.session_state.awaiting_clarification:
-        st.markdown(
-            f"<div class='bubble bubble-assistant'>{st.session_state.clarification_prompt}</div>",
-            unsafe_allow_html=True,
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            message_placeholder.markdown("Optimo is thinking…")
+
+            try:
+                # Run the pipeline
+                response = run_pipeline(full_prompt)
+
+                if (
+                    not response
+                    or "MALFORMED_FUNCTION_CALL" in response
+                    or response.strip() == ""
+                ):
+                    response = "Oops, that didn’t work. Try again."
+            except RuntimeError as e:
+                response = f"Clarification needed:\n{str(e)}"
+                st.session_state.awaiting_clarification = True
+            except Exception as e:
+                import google
+
+                if (
+                    hasattr(google, "genai")
+                    and hasattr(google.genai.errors, "ClientError")
+                    and isinstance(e, google.genai.errors.ClientError)
+                ):
+                    if getattr(e, "code", None) == 429:
+                        response = (
+                            "⚠️ Sorry, we currently have some issues (quota exceeded). "
+                            "Please try again later."
+                        )
+                    else:
+                        response = "Oops, something went wrong with the AI service. Try again later."
+                else:
+                    response = "Oops, that didn’t work. Try again."
+
+            message_placeholder.markdown(response)
+
+        st.session_state.messages.append(
+            {"role": "assistant", "content": response}
         )
-        clar_input = st.text_input(
-            "Provide clarifications for Expert Agent:", key="clar_input"
-        )
-        if st.button("Submit clarification", key="submit_clar"):
-            if clar_input.strip():
-                st.session_state.messages.append(
-                    {"role": "user", "content": clar_input}
-                )
-                st.session_state.awaiting_clarification = False
-                updated_prompt = (
-                    st.session_state.pipeline_prompt
-                    + f"\nClarifications: {clar_input}\n"
-                )
-                _run_pipeline(updated_prompt)
-    else:
-        prompt = st.chat_input("Ask Optimo…", key="chat_input")
-        if prompt:
-            st.session_state.messages.append(
-                {"role": "user", "content": prompt}
-            )
-            st.session_state.pipeline_prompt = prompt
-            _run_pipeline(prompt)
 
 
 def show_logout_message():
     st.markdown(
-        "<div class='card' style='text-align:center; padding:3rem;'><h2 style='color:#7c3aed;'>You have been successfully logged out. </h2><p>Thank you for using Optimo. See you next time!</p></div>",
+        "<div class='card' style='background: linear-gradient(-45deg, #f4d03f, #f1c40f, #f7dc6f, #f9e79f); padding:3rem; text-align:center; border-radius:20px;'>"
+        "<h2 style='color:#4b3429;'>You have been successfully logged out.</h2>"
+        "<p>Thank you for using Optimo. See you next time!</p></div>",
         unsafe_allow_html=True,
     )
     st.button("Back to Login", on_click=lambda: go_to_page("welcome"))
