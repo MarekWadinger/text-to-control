@@ -1,0 +1,23 @@
+cases:
+  - name: basics_problem_1
+    inputs: |
+      Company Record'm Record have three studios in which CD's are made. Cost of manufacturing
+      CD in first studio is 10x, where x is number of CD's made. In second studio the cost is 2y^2 and
+      in third cost of manufacturing CD's is defined as z^2 + 8z. Note, that y, z are numbers of CD
+      made in respective studios. Objective is to minimize cost of production. Company wants to
+      produce exactly 100 CDs. Unions pose additional constraints, that workers in studios 2 and 3
+      must not work more than 60 hours altogether. Consider that time to produce CD in studio 2 is
+      4h and in studio 3 is 2h.
+    expected_output:
+      success: True
+      stdout: str
+      error: None
+      objective_name: "cost"
+      objective_value: 986.50
+    metadata:
+      focus: optimization
+    evaluators:
+      - LLMJudge:
+          rubric: The response should formulate a clear linear optimization model (decision variables, objective function, and constraints) for the basics problem and explain how the model satisfies the constraints and minimizes the cost of production.
+          include_input: true
+      - EqualsExpected
