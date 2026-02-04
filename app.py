@@ -1,11 +1,35 @@
 import time
 from functools import wraps
 
+import logfire
 import streamlit as st
 
 from app.access_control import check_can_use_free_tier, mark_free_tier_used
 from app.backend_interface import run_pipeline
+from config import Settings
+from src.agents.expert import ExpertInquiry
+from src.pipeline import ClarificationNeeded
 
+settings = Settings()
+
+
+def scrubbing_callback(m: logfire.ScrubMatch):
+    if m.path == ("message", "e") and m.pattern_match.group(0) == "session":
+        return m.value
+
+    if m.path == ("attributes", "e") and m.pattern_match.group(0) == "session":
+        return m.value
+
+
+logfire.configure(
+    token=settings.logfire_token,
+    send_to_logfire="if-token-present",
+    distributed_tracing=False,
+    service_name="app",
+    environment=settings.environment,
+    scrubbing=logfire.ScrubbingOptions(callback=scrubbing_callback),
+)
+logfire.instrument_pydantic_ai()
 # --- Setup ---
 st.set_page_config(page_title="Optimo.ai", page_icon="🔮", layout="wide")
 
@@ -20,6 +44,8 @@ if "pipeline_prompt" not in st.session_state:
     st.session_state.pipeline_prompt = ""
 if "awaiting_clarification" not in st.session_state:
     st.session_state.awaiting_clarification = False
+if "clarification_context" not in st.session_state:
+    st.session_state.clarification_context = ""
 if "last_call_time" not in st.session_state:
     st.session_state.last_call_time = 0
 
@@ -233,7 +259,7 @@ div[data-testid="stChatInput"] textarea:focus {
 # Welcome Message Placeholder
 placeholder_container = st.empty()
 if len(st.session_state.messages) == 0:
-    placeholder_container.markdown(
+    placeholder_container.html(
         """
     <div style="
         text-align: center;
@@ -272,7 +298,6 @@ if len(st.session_state.messages) == 0:
     }
     </style>
     """,
-        unsafe_allow_html=True,
     )
 
 # Display Chat History
@@ -286,6 +311,9 @@ if prompt := st.chat_input(
     if st.session_state.awaiting_clarification
     else "Ask Optimo…",
     key="chat_input",
+    # TODO: Add file upload support by adding multimodal capabilities to the model
+    # accept_file="directory",
+    # file_type=["jpg", "jpeg", "png", "pdf"],
 ):
     st.session_state.messages.append({"role": "user", "content": prompt})
 
@@ -295,9 +323,16 @@ if prompt := st.chat_input(
         st.markdown(prompt)
 
     if st.session_state.awaiting_clarification:
-        full_prompt = (
-            f"{st.session_state.pipeline_prompt}\nClarifications:\n{prompt}"
-        )
+        clarification_context = st.session_state.clarification_context
+        if clarification_context:
+            full_prompt = (
+                f"{st.session_state.pipeline_prompt}\n"
+                f"{clarification_context}\n"
+                f"Clarifications:\n{prompt}"
+            )
+        else:
+            full_prompt = f"{st.session_state.pipeline_prompt}\nClarifications:\n{prompt}"
+        st.session_state.clarification_context = ""
         st.session_state.awaiting_clarification = False
     else:
         full_prompt = prompt
@@ -316,10 +351,11 @@ if prompt := st.chat_input(
                 or "MALFORMED_FUNCTION_CALL" in response
                 or response.strip() == ""
             ):
-                response = "Oops, that didn't work. Try again."
-        except RuntimeError as e:
-            response = f"Clarification needed:\n{str(e)}"
+                response = "Oops, I couldn't process your request. Try again."
+        except ClarificationNeeded as e:
+            response = e.inquiry
             st.session_state.awaiting_clarification = True
+            st.session_state.clarification_context = e.inquiry
         except Exception as e:
             import google
 
@@ -338,9 +374,27 @@ if prompt := st.chat_input(
             else:
                 response = "Oops, that didn't work. Try again."
                 # Log for debugging
-                print(f"Error in pipeline: {e}")
+                logfire.error(f"Error in pipeline: {e}")
 
-        message_placeholder.markdown(response)
+        if isinstance(response, ExpertInquiry):
+            with message_placeholder.form(
+                "Clarification Form",
+                border=False,
+                enter_to_submit=True,
+            ):
+                st.markdown(response.explanation)
+                answers = []
+                for question in response.clarification_questions:
+                    answer = st.radio(question.question, question.choices)
+                    answers.append(answer)
+                submitted = st.form_submit_button("Submit")
+                if submitted:
+                    st.session_state.clarification_context = (
+                        f"Clarifications answers: \n{'\n'.join(answers)}"
+                    )
+                    st.session_state.awaiting_clarification = False
+        else:
+            message_placeholder.markdown(response)
 
     st.session_state.messages.append(
         {"role": "assistant", "content": response}
