@@ -7,15 +7,26 @@ import tempfile
 from typing import Any
 
 import google.genai.errors
-from pydantic_ai.models.google import GoogleModel
+from pydantic_ai.models.google import GoogleModel, ModelRequestParameters
+from pydantic_ai.models.openai import OpenAIChatModel, OpenAIResponsesModel
 from pydantic_ai.providers.google import GoogleProvider
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from config import Settings
 
 # --- Model setup ---
 settings = Settings()
 # Default provider using env/config
-default_provider = GoogleProvider(api_key=settings.gemini_api_key)
+google_provider = GoogleProvider(api_key=settings.gemini_api_key)
+openai_provider = OpenAIProvider(api_key=settings.openai_api_key)
+openai_model = OpenAIChatModel(
+    "gpt-5-mini",
+    provider=openai_provider,
+)
+codex_model = OpenAIResponsesModel(
+    "gpt-5.1-codex",
+    provider=openai_provider,
+)
 
 MODEL_PRIORITY = [
     "gemini-2.5-flash-lite",
@@ -36,7 +47,10 @@ class GeminiFallbackModel(GoogleModel):
         super().__init__(model_names[self.current_index], provider=provider)
 
     async def request(
-        self, messages, model_settings=None, model_request_parameters=None
+        self,
+        messages,
+        model_settings=None,
+        model_request_parameters=ModelRequestParameters(),
     ):
         while self.current_index < len(self.model_names):
             try:
@@ -58,16 +72,6 @@ class GeminiFallbackModel(GoogleModel):
                         )
                 else:
                     raise
-
-
-# Default model instance (using system key)
-def get_model(api_key: str | None = None):
-    if not api_key:
-        return GeminiFallbackModel(MODEL_PRIORITY, default_provider)
-    else:
-        return GeminiFallbackModel(
-            MODEL_PRIORITY, GoogleProvider(api_key=api_key)
-        )
 
 
 def safe_execute_python_code(code: str) -> dict[str, Any]:

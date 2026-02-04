@@ -2,28 +2,29 @@ import os
 import subprocess
 import tempfile
 from dataclasses import dataclass
+from textwrap import dedent
 
 from pydantic import BaseModel
-from pydantic_ai import Agent
+from pydantic_ai import Agent, RunContext
 from pydantic_ai.exceptions import ModelRetry
 
-from .base import get_model
-from .expert import ProblemType
+from .base import codex_model
+from .expert import ExpertOutput
 
 
 @dataclass
-class IntegratorDeps:
-    """Dependencies used by the IntegratorAgent during code generation."""
-
-    reformulated_problem: str
-    problem_type: ProblemType
-    assumptions: list[str]
+class IntegratorDeps(ExpertOutput):
+    pass
 
 
 class IntegratorOutput(BaseModel):
-    """Output of the IntegratorAgent."""
-
     code: str
+
+
+class CodeFailure(BaseModel):
+    """An unrecoverable failure. Only use this when you can't generate valid code."""
+
+    reason: str
 
 
 with open("src/instructions/integrator.md", encoding="utf-8") as f:
@@ -71,15 +72,28 @@ def code_no_msglev_check(code: str) -> str:
     return code
 
 
-class IntegratorAgent:
+def check_code(code: str) -> IntegratorOutput:
+    """Check bundle for the code to be valid."""
+    code = ruff_check(code)
+    code = code_no_msglev_check(code)
+    return IntegratorOutput(code=code)
+
+
+async def instructions(ctx: RunContext[IntegratorDeps]) -> str:
+    return integrator_instructions + dedent(f"""
+    {ctx.deps.model_dump_json(indent=2)}
+    """)
+
+
+class IntegratorAgent(Agent[IntegratorDeps, IntegratorOutput | CodeFailure]):
     """Generate runnable code from the ExpertAgent's reformulated problem."""
 
-    def __init__(self, api_key: str | None = None):
+    def __init__(self):
         """Create the Integrator configured to generate and validate code."""
-        self.agent: Agent[IntegratorDeps, str | IntegratorOutput] = Agent(
-            model=get_model(api_key),
+        super().__init__(
+            model=codex_model,
             deps_type=IntegratorDeps,
-            output_type=[ruff_check, IntegratorOutput],
-            instructions=integrator_instructions,
+            output_type=[check_code, CodeFailure],
+            instructions=instructions,
             retries=3,
         )
