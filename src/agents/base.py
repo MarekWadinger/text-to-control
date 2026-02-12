@@ -6,68 +6,18 @@ import shutil
 import tempfile
 from typing import Any
 
-import google.genai.errors
-from pydantic_ai.models.google import GoogleModel
-from pydantic_ai.providers.google import GoogleProvider
+from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from config import Settings
 
-# --- Model setup ---
 settings = Settings()
-# Default provider using env/config
-default_provider = GoogleProvider(api_key=settings.gemini_api_key)
-
-MODEL_PRIORITY = [
-    "gemini-2.5-flash-lite",
-    "gemini-2.5-flash",
-    "gemini-3-flash-preview",
-    "gemini-3-pro-preview",
-]
+default_provider = OpenAIProvider(api_key=settings.openai_api_key)
 
 
-class GeminiFallbackModel(GoogleModel):
-    """GoogleModel wrapper with automatic fallback on quota exhaustion."""
-
-    def __init__(self, model_names, provider):
-        self.model_names = model_names
-        self.current_index = 0
-        self.provider = provider
-        # initialize the first model
-        super().__init__(model_names[self.current_index], provider=provider)
-
-    async def request(
-        self, messages, model_settings=None, model_request_parameters=None
-    ):
-        while self.current_index < len(self.model_names):
-            try:
-                return await super().request(
-                    messages, model_settings, model_request_parameters
-                )
-            except google.genai.errors.ClientError as e:
-                if e.code == 429:
-                    print(
-                        f"Model {self.model_names[self.current_index]} quota exhausted, switching to next..."
-                    )
-                    self.current_index += 1
-                    if self.current_index < len(self.model_names):
-                        self._model_name = self.model_names[self.current_index]
-                        continue
-                    else:
-                        raise RuntimeError(
-                            "All Gemini models exhausted, please try again later."
-                        )
-                else:
-                    raise
-
-
-# Default model instance (using system key)
 def get_model(api_key: str | None = None):
-    if not api_key:
-        return GeminiFallbackModel(MODEL_PRIORITY, default_provider)
-    else:
-        return GeminiFallbackModel(
-            MODEL_PRIORITY, GoogleProvider(api_key=api_key)
-        )
+    provider = OpenAIProvider(api_key=api_key) if api_key else default_provider
+    return OpenAIModel(model_name="gpt-4o-mini", provider=provider)
 
 
 def safe_execute_python_code(code: str) -> dict[str, Any]:
