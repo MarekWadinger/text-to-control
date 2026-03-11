@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
-from pydantic_ai import Agent, RunContext
+from pydantic_ai import Agent
 
 from .base import openai_model
 
@@ -28,7 +28,7 @@ class ExpertInquiry(BaseModel):
     clarification_questions: list[ClarificationQuestion]
 
 
-class ProblemType(str, Enum):
+class ProblemType(StrEnum):
     LP = "Linear Programming"
     ILP = "Integer Programming"
     MILP = "Mixed-Integer Programming"
@@ -43,7 +43,8 @@ class ExpertOutput(BaseModel):
     )
     problem_type: ProblemType
     assumptions: list[str] = Field(
-        description="A list of assumptions explicitly made only because the user could not provide details. Never assume anything that you have not directly queried and confirmed with the user."
+        default_factory=list,
+        description="A list of assumptions explicitly made only because the user could not provide details. Never assume anything that you have not directly queried and confirmed with the user.",
     )
 
 
@@ -51,14 +52,16 @@ with open("src/instructions/expert.md") as f:
     expert_instructions = f.read()
 
 
-def pid_cookbook(ctx: RunContext[str]) -> str:
-    """Use this cookbook for PID tuning problems."""
-    return open("src/instructions/expert_cookbooks/pid.md").read()
+def pid_cookbook() -> str:
+    """Return a static PID tuning cookbook; repeat calls are unnecessary."""
+    with open("src/instructions/expert_cookbooks/pid.md") as f:
+        return f.read()
 
 
-def allocation_cookbook(ctx: RunContext[str]) -> str:
-    """Use this cookbook for resource allocation problems."""
-    return open("src/instructions/expert_cookbooks/allocation.md").read()
+def allocation_cookbook() -> str:
+    """Return a static resource allocation cookbook; repeat calls are unnecessary."""
+    with open("src/instructions/expert_cookbooks/allocation.md") as f:
+        return f.read()
 
 
 class ExpertAgent(Agent[str, ExpertOutput | ExpertInquiry]):
@@ -66,12 +69,12 @@ class ExpertAgent(Agent[str, ExpertOutput | ExpertInquiry]):
 
     def __init__(
         self,
-        model: str = openai_model,
+        model=openai_model,
         instructions: str = expert_instructions,
     ):
         super().__init__(
             model=model,
             output_type=[ExpertOutput, ExpertInquiry],
             instructions=instructions,
-            tools=[pid_cookbook, allocation_cookbook],
+            tools=[pid_cookbook],
         )
