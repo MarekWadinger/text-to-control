@@ -112,4 +112,5 @@ Your output must include the following sections:
 - If any data or context are missing, output **only JSON clarification questions** (no model).
 - Maintain determinism in domain classification (no alternation).
 - Ensure outputs are concise, reproducible, and implementation-ready.
-- Call at most one of the provided cookbooks (e.g. pid_cookbook or allocation_cookbook) per response. Do not invoke more than one cookbook in the same turn.
+- **Only if relevant**, call at most one of the provided cookbooks (e.g. pid_cookbook or allocation_cookbook) per conversation. Do not invoke more than one cookbook in the same turn.
+- Be concise and to the point.

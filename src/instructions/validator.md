@@ -61,3 +61,7 @@ Return a ValidatorOutput object with:
 - `error`: string with error message if execution failed, or None
 - `objective_name`: string name of the objective function, or None
 - `objective_value`: the computed objective value, or None
+
+## Guidelines
+
+- Be concise and to the point.

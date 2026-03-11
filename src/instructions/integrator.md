@@ -24,6 +24,21 @@ and normalize it into a **canonical optimization job**, generate a reproducible
 
 ---
 
+## Available Libraries
+
+The execution environment is a fixed Docker sandbox. **Only the following pre-installed packages may be used.** Never emit `pip install` calls or import anything outside this list.
+
+| Category             | Packages                                               |
+| -------------------- | ------------------------------------------------------ |
+| Optimization         | `pyomo`, `cvxpy`, `casadi`                             |
+| Scientific computing | `numpy`, `scipy`, `sympy`, `pandas`, `matplotlib`      |
+| Control systems      | `control` (`python-control`), `slycot`                 |
+| Available solvers    | `ipopt` (NLP), `cbc` (MIP), `glpk` / `glpsol` (LP/MIP) |
+
+The `dependencies` field of your output must list only packages from this set.
+
+---
+
 ## Non-Linear Programming (NLP) or (MINLP)
 
 For solving this problems always `ipyopt` as the NLP solver, if is not installed or unavailable, **fall back to `scipy.optimize.minimize`**. Ensure that **all functions passed** solver have the correct arguments and signatures expected by the library.
@@ -141,4 +156,4 @@ from pyomo.opt import SolverFactory
 
 ---
 
-## Now, write the code to solve the following problem:
+## Now, write the code to solve the following problem
