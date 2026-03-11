@@ -29,7 +29,7 @@ env-encrypt:
     if [ -z "${ENV_PASSWORD-}" ]; then \
         openssl aes-256-cbc -a -salt -pbkdf2 -in .env -out .env.enc; \
     else \
-        openssl aes-256-cbc -a -salt -pbkdf2 -in .env -out .env.enc -pass pass:\"$ENV_PASSWORD\"; \
+        openssl aes-256-cbc -a -salt -pbkdf2 -in .env -out .env.enc -pass pass:\""$ENV_PASSWORD"\"; \
     fi
     @echo "✓ .env encrypted to .env.enc"
 
@@ -38,7 +38,7 @@ env-decrypt:
     if [ -z "${ENV_PASSWORD-}" ]; then \
         openssl aes-256-cbc -d -a -pbkdf2 -in .env.enc -out .env; \
     else \
-        openssl aes-256-cbc -d -a -pbkdf2 -in .env.enc -out .env -pass pass:\"$ENV_PASSWORD\"; \
+        openssl aes-256-cbc -d -a -pbkdf2 -in .env.enc -out .env -pass pass:\""$ENV_PASSWORD"\"; \
     fi
     @echo "✓ .env decrypted from .env.enc"
 
@@ -85,6 +85,10 @@ clean:
 build:
     @echo "🏗️  Building package..."
     uv build
+
+validator-build:
+    @echo "🐳 Building validator Docker sandbox..."
+    docker build -t text-to-control-validator docker/validator/
 
 check:
     just lint
