@@ -118,11 +118,13 @@ def code_no_msglev_check(code: str) -> str:
     return code
 
 
-def check_code(code: str) -> IntegratorOutput:
-    """Check bundle for the code validation."""
+def check_code(
+    code: str, dependencies: list[str] | None = None
+) -> IntegratorOutput:
+    """Validate generated code and preserve dependency metadata."""
     code = ruff_check(code)
     code = code_no_msglev_check(code)
-    return IntegratorOutput(code=code)
+    return IntegratorOutput(code=code, dependencies=dependencies or [])
 
 
 async def instructions(ctx: RunContext[IntegratorDeps]) -> str:

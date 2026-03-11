@@ -87,7 +87,6 @@ def run_backend(prompt_text):
 
     user_email = get_user_email()
     if user_email:
-        print("logged in")
         # Check if using free tier
         if st.session_state.api_key == system_key and system_key:
             # Re-verify free tier availability before execution
@@ -200,7 +199,6 @@ with st.sidebar:
                         st.warning(
                             "❌ The provided API Key is invalid. Please check and try again."
                         )
-            st.session_state.api_key = user_key
         elif free_tier_available:
             # Re-ensure system key is set if user cleared the input but free tier is valid
             st.session_state.api_key = system_key

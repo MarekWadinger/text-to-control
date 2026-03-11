@@ -34,7 +34,7 @@ async def expert_task(inputs: str):
     """
     with logfire.span("expert_task"):
         expert_result = await expert.run(inputs)
-    return expert_result
+    return expert_result.output
 
 
 async def integrator_task(inputs: dict):

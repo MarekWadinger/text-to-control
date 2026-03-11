@@ -76,5 +76,5 @@ class ExpertAgent(Agent[str, ExpertOutput | ExpertInquiry]):
             model=model,
             output_type=[ExpertOutput, ExpertInquiry],
             instructions=instructions,
-            tools=[pid_cookbook],
+            tools=[pid_cookbook, allocation_cookbook],
         )
