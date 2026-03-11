@@ -67,9 +67,8 @@ async def pipeline(
     usage_limits = UsageLimits(request_limit=15)
 
     if clarification_mode == "ignore":
-        prompt = (
+        prompt += "\n" + (
             "CRITICAL: Clarification questions are disabled. Proceed with the problem using reasonable assumptions, and list all assumptions explicitly."
-            + prompt
         )
 
     # --- Expert Step ---
