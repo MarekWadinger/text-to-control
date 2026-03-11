@@ -1,14 +1,11 @@
-import contextlib
-import io
-import os
-import runpy
-import shutil
-import tempfile
-from typing import Any
-
 import google.genai.errors
-from pydantic_ai.models.google import GoogleModel, ModelRequestParameters
-from pydantic_ai.models.openai import OpenAIChatModel, OpenAIResponsesModel
+import openai
+from pydantic_ai.models.fallback import FallbackModel
+from pydantic_ai.models.google import GoogleModel
+from pydantic_ai.models.openai import (
+    OpenAIChatModel,
+    OpenAIResponsesModelSettings,
+)
 from pydantic_ai.providers.google import GoogleProvider
 from pydantic_ai.providers.openai import OpenAIProvider
 
@@ -16,19 +13,34 @@ from config import Settings
 
 # --- Model setup ---
 settings = Settings()
-# Default provider using env/config
-google_provider = GoogleProvider(api_key=settings.gemini_api_key)
+
+## OpenAI Models ##
 openai_provider = OpenAIProvider(api_key=settings.openai_api_key)
-openai_model = OpenAIChatModel(
-    "gpt-5-mini",
-    provider=openai_provider,
-)
-codex_model = OpenAIResponsesModel(
-    "gpt-5.1-codex",
-    provider=openai_provider,
+
+OPENAI_MODEL_PRIORITY = [
+    "gpt-5.1",
+    "gpt-5.2",
+    "gpt-5.1-mini",
+]
+model_settings = OpenAIResponsesModelSettings(
+    openai_previous_response_id="auto"
 )
 
-MODEL_PRIORITY = [
+openai_fallback_on = (openai.RateLimitError,)
+openai_model = FallbackModel(
+    *[
+        OpenAIChatModel(
+            model, provider=openai_provider, settings=model_settings
+        )
+        for model in OPENAI_MODEL_PRIORITY
+    ],
+    fallback_on=openai_fallback_on,
+)
+
+## Gemini Models ##
+google_provider = GoogleProvider(api_key=settings.gemini_api_key)
+
+GEMINI_MODEL_PRIORITY = [
     "gemini-2.5-flash-lite",
     "gemini-2.5-flash",
     "gemini-3-flash-preview",
@@ -36,93 +48,19 @@ MODEL_PRIORITY = [
 ]
 
 
-class GeminiFallbackModel(GoogleModel):
-    """GoogleModel wrapper with automatic fallback on quota exhaustion."""
+gemini_fallback_on = (
+    google.genai.errors.ClientError,
+)  # Fallback on client error would usually mean we exhausted quota on specific model
+gemini_model = FallbackModel(
+    *[
+        GoogleModel(model, provider=google_provider)
+        for model in GEMINI_MODEL_PRIORITY
+    ],
+    fallback_on=gemini_fallback_on,
+)
 
-    def __init__(self, model_names, provider):
-        self.model_names = model_names
-        self.current_index = 0
-        self.provider = provider
-        # initialize the first model
-        super().__init__(model_names[self.current_index], provider=provider)
-
-    async def request(
-        self,
-        messages,
-        model_settings=None,
-        model_request_parameters=ModelRequestParameters(),
-    ):
-        while self.current_index < len(self.model_names):
-            try:
-                return await super().request(
-                    messages, model_settings, model_request_parameters
-                )
-            except google.genai.errors.ClientError as e:
-                if e.code == 429:
-                    print(
-                        f"Model {self.model_names[self.current_index]} quota exhausted, switching to next..."
-                    )
-                    self.current_index += 1
-                    if self.current_index < len(self.model_names):
-                        self._model_name = self.model_names[self.current_index]
-                        continue
-                    else:
-                        raise RuntimeError(
-                            "All Gemini models exhausted, please try again later."
-                        )
-                else:
-                    raise
-
-
-def safe_execute_python_code(code: str) -> dict[str, Any]:
-    """Safely execute Python code (e.g. Pyomo model) in an isolated temp directory."""
-    from typing import Any
-
-    output_capture = io.StringIO()
-    tmp_dir = tempfile.mkdtemp(prefix="sandbox_")
-    script_path = os.path.join(tmp_dir, "model.py")
-    result: dict[str, Any] = {}
-
-    with open(script_path, "w", encoding="utf-8") as f:
-        f.write(code)
-
-    try:
-        with contextlib.redirect_stdout(output_capture):
-            ns = runpy.run_path(script_path)
-
-            for name, fn in ns.items():
-                if callable(fn) and "solve" in name.lower():
-                    fn()
-                    break
-            else:
-                pass
-
-        result["stdout"] = output_capture.getvalue()
-        result["error"] = None
-
-        model_obj = ns.get("model")
-        if model_obj:
-            try:
-                from pyomo.core import Objective
-
-                objs = [
-                    c
-                    for c in model_obj.component_objects(
-                        Objective, active=True
-                    )
-                ]
-                if objs:
-                    obj = objs[0]
-                    val = obj()
-                    result["objective_name"] = obj.name
-                    result["objective_value"] = float(val)
-            except Exception:
-                result["objective_value"] = "Unknown (not solved)"
-
-    except Exception as e:
-        result["stdout"] = output_capture.getvalue()
-        result["error"] = str(e)
-    finally:
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-
-    return result
+## Fallback Model ##
+fallback_model = FallbackModel(
+    openai_model,
+    gemini_model,
+)
