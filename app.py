@@ -80,7 +80,7 @@ def get_user_email() -> str | None:
 @rate_limit
 def run_backend(prompt_text):
     # Check usage before running
-    system_key = st.secrets.get("GEMINI_API_KEY", "")
+    system_key = st.secrets.get("OPENAI_API_KEY", "")
 
     # Check if we have a valid key to use (either system or user provided)
     has_valid_access = False
@@ -96,18 +96,18 @@ def run_backend(prompt_text):
                 has_valid_access = True
             else:
                 # Should be caught by UI, but double check
-                return "⚠️ **Daily limit reached.**\nPlease provide your own Gemini API Key in the sidebar to continue."
+                return "⚠️ **Daily limit reached.**\nPlease provide your own LLM API Key in the sidebar to continue."
         elif st.session_state.api_key:
             # Using personal key
             has_valid_access = True
         else:
-            return "⚠️ **Daily limit reached.**\nPlease provide your own Gemini API Key in the sidebar to continue."
+            return "⚠️ **Daily limit reached.**\nPlease provide your own LLM API Key in the sidebar to continue."
     elif st.session_state.api_key:
         # Guest with key
         has_valid_access = True
 
     if not has_valid_access:
-        return "🔒 **Access Restricted**\nPlease log in or provide a Gemini API Key in the sidebar to proceed."
+        return "🔒 **Access Restricted**\nPlease log in or provide a LLM API Key in the sidebar to proceed."
 
     return run_pipeline(prompt_text)
 
@@ -131,7 +131,7 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
         user_key = st.text_input(
-            "Gemini API Key",
+            "LLM API Key",
             type="password",
             key="guest_api_key",
             placeholder="AIzaSy...",
@@ -148,7 +148,7 @@ with st.sidebar:
 
         st.markdown("---")
 
-        system_key = st.secrets.get("GEMINI_API_KEY", "")
+        system_key = st.secrets.get("OPENAI_API_KEY", "")
         user_email = get_user_email()
         free_tier_available = (
             user_email is not None and check_can_use_free_tier(user_email)
@@ -171,7 +171,7 @@ with st.sidebar:
 
         # Allow overriding with personal key even if free tier is available
         user_key = st.text_input(
-            "Your Gemini API Key",
+            "Your LLM API Key",
             type="password",
             value=st.session_state.api_key
             if st.session_state.api_key != system_key
@@ -182,16 +182,18 @@ with st.sidebar:
 
         if user_key:
 
-            def is_valid_gemini_key(key: str) -> bool:
+            def is_valid_llm_key(key: str) -> bool:
                 return (
-                    (key.startswith("AIza") or key.startswith("GOCSPX"))
-                    and isinstance(key, str)
+                    # (key.startswith("AIza") or key.startswith("GOCSPX"))  # Gemini API Key
+                    isinstance(key, str)
+                    and key.startswith("sk-")  # OpenAI API Key
                     and len(key) >= 30
+                    and key != system_key
                 )
 
             if user_key != st.session_state.api_key:
                 with st.spinner("Validating API Key..."):
-                    if is_valid_gemini_key(user_key):
+                    if is_valid_llm_key(user_key):
                         st.session_state.api_key = user_key
                         st.toast("API Key accepted and validated!", icon="✅")
                     else:
@@ -374,7 +376,7 @@ if prompt := st.chat_input(
             else:
                 response = "Oops, that didn't work. Try again."
                 # Log for debugging
-                logfire.error(f"Error in pipeline: {e}")
+                logfire.error("Error in pipeline: {error}", error=e)
 
         if isinstance(response, ExpertInquiry):
             with message_placeholder.form(
