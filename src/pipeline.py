@@ -123,8 +123,7 @@ async def pipeline(
 
     # --- Validator Step ---
     with logfire.span("validator"):
-        validator_result = await validator.agent.run(
-            "",
+        validator_result = await validator.run(
             deps=code,
             usage=usage,
             usage_limits=usage_limits,
