@@ -85,7 +85,7 @@ async def pipeline(
                 == "ignore"  # Override output type for ignore mode
                 else None,
                 usage=usage,
-                usage_limits=UsageLimits(request_limit=5, tool_calls_limit=1),
+                usage_limits=UsageLimits(request_limit=5),
             )
             expert_output = expert_result.output
 
