@@ -17,17 +17,39 @@ Basic usage:
 
 Requires Python 3.12 or higher.
 
-### From Source with [UV](https://docs.astral.sh/uv/)
+**Requirements:**
+
+- Python 3.12+
+- [UV](https://docs.astral.sh/uv/) package manager
+- [Just](https://github.com/casey/just) (optional, for task running)
+
+**Installation:**
 
 ```bash
 git clone https://github.com/MarekWadinger/text-to-control.git
 cd text-to-control
+```
+
+**Environment:**
+
+Install dependencies using `uv`:
+
+```bash
+just install
+# or manually:
 uv sync
+```
+
+### Development Workflow
+
+```bash
+just install-hooks
+just check
 ```
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please open an issue first to discuss what you would like to change.
 
 ### Development Setup
 
@@ -42,7 +64,7 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Run-only. No modification or redistribution without explicit author permission - see the [LICENSE](LICENSE) file for details.
 
 ## 📞 Support
 

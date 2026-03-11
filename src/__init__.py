@@ -1,10 +1,7 @@
 from .agents import (
     ExpertAgent,
-    ExpertDeps,
     ExpertOutput,
     IntegratorAgent,
-    IntegratorDeps,
-    IntegratorOutput,
     ValidatorAgent,
     ValidatorDeps,
     ValidatorOutput,
@@ -12,11 +9,8 @@ from .agents import (
 
 __all__ = [
     "ExpertAgent",
-    "ExpertDeps",
     "ExpertOutput",
     "IntegratorAgent",
-    "IntegratorDeps",
-    "IntegratorOutput",
     "ValidatorAgent",
     "ValidatorDeps",
     "ValidatorOutput",

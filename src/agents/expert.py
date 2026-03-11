@@ -1,25 +1,34 @@
-from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
-from .base import get_model
+from .base import openai_model
 
 
-@dataclass
-class ExpertDeps:
-    reformulation_code: str | None = None
-    assumptions: list[str] = field(default_factory=list)
-    history: list[str] = field(default_factory=list)
+class ClarificationQuestion(BaseModel):
+    """Question for the user to clarify the problem."""
+
+    question: str = Field(
+        description="A clear question for the user to help clarify the problem, using language that matches the user's likely expertise. Avoid any technical terms or jargon unless the user obviously has advanced knowledge.",
+    )
+    choices: list[str] = Field(
+        default_factory=list,
+        description="A list of maximum three **one-word choices**, sorted by assumed relevance and highly relevant to the optimal decision making, to present to the user if possible to choose from for clarification.",
+        max_length=3,
+    )
 
 
 class ExpertInquiry(BaseModel):
-    explanation: str
-    clarification_questions: list[str]
+    """Inquiry for the user to clarify the problem."""
+
+    explanation: str = Field(
+        description="Inquiry with why these questions are asked to the user."
+    )
+    clarification_questions: list[ClarificationQuestion]
 
 
-class ProblemType(str, Enum):
+class ProblemType(StrEnum):
     LP = "Linear Programming"
     ILP = "Integer Programming"
     MILP = "Mixed-Integer Programming"
@@ -29,23 +38,43 @@ class ProblemType(str, Enum):
 
 
 class ExpertOutput(BaseModel):
-    reformulated_problem: str
+    reformulated_problem: str = Field(
+        description="The reformulated problem in LaTeX format."
+    )
     problem_type: ProblemType
-    assumptions: list[str]
+    assumptions: list[str] = Field(
+        default_factory=list,
+        description="A list of assumptions explicitly made only because the user could not provide details. Never assume anything that you have not directly queried and confirmed with the user.",
+    )
 
 
 with open("src/instructions/expert.md") as f:
     expert_instructions = f.read()
 
 
-class ExpertAgent:
+def pid_cookbook() -> str:
+    """Return a static PID tuning cookbook; repeat calls are unnecessary."""
+    with open("src/instructions/expert_cookbooks/pid.md") as f:
+        return f.read()
+
+
+def allocation_cookbook() -> str:
+    """Return a static resource allocation cookbook; repeat calls are unnecessary."""
+    with open("src/instructions/expert_cookbooks/allocation.md") as f:
+        return f.read()
+
+
+class ExpertAgent(Agent[str, ExpertOutput | ExpertInquiry]):
     """Reformulate user optimization problems into structured form."""
 
-    def __init__(self, api_key: str | None = None):
-        self.agent: Agent[ExpertDeps, ExpertOutput | ExpertInquiry] = Agent(
-            model=get_model(api_key),
-            deps_type=ExpertDeps,
+    def __init__(
+        self,
+        model=openai_model,
+        instructions: str = expert_instructions,
+    ):
+        super().__init__(
+            model=model,
             output_type=[ExpertOutput, ExpertInquiry],
-            instructions=expert_instructions,
-            retries=3,
+            instructions=instructions,
+            tools=[pid_cookbook, allocation_cookbook],
         )

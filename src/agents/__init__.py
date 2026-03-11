@@ -1,14 +1,12 @@
-from .expert import ExpertAgent, ExpertDeps, ExpertOutput
-from .integrator import IntegratorAgent, IntegratorDeps, IntegratorOutput
+from .expert import ExpertAgent, ExpertOutput
+from .integrator import CodeFailure, IntegratorAgent
 from .validator import ValidatorAgent, ValidatorDeps, ValidatorOutput
 
 __all__ = [
     "ExpertAgent",
-    "ExpertDeps",
     "ExpertOutput",
     "IntegratorAgent",
-    "IntegratorDeps",
-    "IntegratorOutput",
+    "CodeFailure",
     "ValidatorAgent",
     "ValidatorDeps",
     "ValidatorOutput",
