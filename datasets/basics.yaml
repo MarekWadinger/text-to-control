@@ -1,5 +1,5 @@
 cases:
-  - name: basics_problem_1
+  - name: pipeline_problem_1
     inputs: |
       Company Record'm Record have three studios in which CD's are made. Cost of manufacturing
       CD in first studio is 10x, where x is number of CD's made. In second studio the cost is 2y^2 and
@@ -20,4 +20,162 @@ cases:
       - LLMJudge:
           rubric: The response should formulate a clear linear optimization model (decision variables, objective function, and constraints) for the basics problem and explain how the model satisfies the constraints and minimizes the cost of production.
           include_input: true
-      - EqualsExpected
+      - Contains:
+          value:
+            objective_value: 986.50
+          as_strings: true
+  - name: expert_problem_1
+    inputs: |
+      Company Record'm Record have three studios in which CD's are made. Cost of manufacturing
+      CD in first studio is 10x, where x is number of CD's made. In second studio the cost is 2y^2 and
+      in third cost of manufacturing CD's is defined as z^2 + 8z. Note, that y, z are numbers of CD
+      made in respective studios. Objective is to minimize cost of production. Company wants to
+      produce exactly 100 CDs. Unions pose additional constraints, that workers in studios 2 and 3
+      must not work more than 60 hours altogether. Consider that time to produce CD in studio 2 is
+      4h and in studio 3 is 2h.
+    expected_output:
+      reformulated_problem: |
+        Define decision variables:
+        x = number of CDs produced in studio 1
+        y = number of CDs produced in studio 2
+        z = number of CDs produced in studio 3
+
+        Objective:
+          Minimize total production cost: Minimize C = 10x + 2y^2 + (z^2 + 8z)
+
+        Subject to constraints:
+          1. Total production constraint: x + y + z = 100
+
+          2. Labor time constraint for studios 2 and 3: 4y + 2z ≤ 60
+
+          3. Non-negativity and integrality (if required): x ≥ 0, y ≥ 0, z ≥ 0
+            (Add integer constraints if only whole CDs can be produced)
+      problem_type: Linear Programming
+      assumptions: []
+    metadata:
+      focus: optimization
+    evaluators:
+      - LLMJudge:
+          rubric: The response should formulate a clear linear optimization model (decision variables, objective function, and constraints) for the problem.
+          include_input: true
+  - name: integrator_problem_1
+    inputs:
+      reformulated_problem: |
+        Define decision variables:
+          x = number of CDs produced in studio 1
+          y = number of CDs produced in studio 2
+          z = number of CDs produced in studio 3
+
+        Objective:
+          Minimize total production cost:
+            Minimize C = 10x + 2y^2 + (z^2 + 8z)
+
+        Subject to constraints:
+          1. Total production constraint:
+            x + y + z = 100
+
+          2. Labor time constraint for studios 2 and 3:
+            4y + 2z ≤ 60
+
+          3. Non-negativity and integrality (if required):
+            x ≥ 0, y ≥ 0, z ≥ 0
+            (Add integer constraints if only whole CDs can be produced)
+      problem_type: Linear Programming
+
+    expected_output:
+      code: |
+        import pyomo.environ as pyo
+        from pyomo.opt import SolverFactory
+
+        def main():
+            # Define the model
+            model = pyo.ConcreteModel()
+            model.x = pyo.Var(domain=pyo.NonNegativeIntegers)
+            model.y = pyo.Var(domain=pyo.NonNegativeIntegers)
+            model.z = pyo.Var(domain=pyo.NonNegativeIntegers)
+
+            # Objective: Minimize total production cost
+            model.objective = pyo.Objective(
+                expr=10 * model.x + 2 * model.y ** 2 + (model.z ** 2 + 8 * model.z),
+                sense=pyo.minimize
+            )
+
+            # Constraints
+            model.total_production = pyo.Constraint(expr = model.x + model.y + model.z == 100)
+            model.labor_time = pyo.Constraint(expr = 4 * model.y + 2 * model.z <= 60)
+            # Non-negativity is already ensured by domain
+
+            # Solve the model
+            solver = SolverFactory('ipopt')
+            results = solver.solve(model)
+
+            # Print the result
+            print(f"Solver Status: {results.solver.status}")
+            print(f"Termination Condition: {results.solver.termination_condition}")
+            print(f"Objective Value: {pyo.value(model.objective)}")
+            print(f"Variables: x={pyo.value(model.x)}, y={pyo.value(model.y)}, z={pyo.value(model.z)}")
+
+            return model
+
+        if __name__ == "__main__":
+            main()
+    metadata:
+      focus: optimization
+    evaluators:
+      - LLMJudge:
+          rubric: The response should develop a python code to solve the problem.
+          include_input: true
+          include_expected_output: true
+  - name: validator_problem_1
+    inputs:
+      code: |
+        import pyomo.environ as pyo
+        from pyomo.opt import SolverFactory
+
+        def main():
+            # Define the model
+            model = pyo.ConcreteModel()
+            model.x = pyo.Var(domain=pyo.NonNegativeIntegers)
+            model.y = pyo.Var(domain=pyo.NonNegativeIntegers)
+            model.z = pyo.Var(domain=pyo.NonNegativeIntegers)
+
+            # Objective: Minimize total production cost
+            model.objective = pyo.Objective(
+                expr=10 * model.x + 2 * model.y ** 2 + (model.z ** 2 + 8 * model.z),
+                sense=pyo.minimize
+            )
+
+            # Constraints
+            model.total_production = pyo.Constraint(expr = model.x + model.y + model.z == 100)
+            model.labor_time = pyo.Constraint(expr = 4 * model.y + 2 * model.z <= 60)
+            # Non-negativity is already ensured by domain
+
+            # Solve the model
+            solver = SolverFactory('ipopt')
+            results = solver.solve(model)
+
+            # Print the result
+            print(f"Solver Status: {results.solver.status}")
+            print(f"Termination Condition: {results.solver.termination_condition}")
+            print(f"Objective Value: {pyo.value(model.objective)}")
+            print(f"Variables: x={pyo.value(model.x)}, y={pyo.value(model.y)}, z={pyo.value(model.z)}")
+
+            return model
+
+        if __name__ == "__main__":
+            main()
+    expected_output:
+      success: True
+      stdout: str
+      error: None
+      objective_name: "cost"
+      objective_value: 986.50
+    metadata:
+      focus: validation
+    evaluators:
+      - LLMJudge:
+          rubric: The response should validate the problem and return the objective name and value.
+          include_input: true
+      - Contains:
+          value:
+            objective_value: 986.50

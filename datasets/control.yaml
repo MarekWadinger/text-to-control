@@ -68,7 +68,10 @@ cases:
       - LLMJudge:
           rubric: The response should formulate a clear linear optimization model (decision variables, objective function, and constraints) for the control problem and explain how the model satisfies the constraints and minimizes the total temperature control error.
           include_input: true
-      - EqualsExpected
+      - HasMatchingSpan:
+        some_descendant_has:
+          has_attributes:
+            gen_ai.tool.name: pid_cookbook
   - name: control_problem_2
     inputs: |
       We want to tune a PID controller for a SISO plant to track a unit step with minimal error and limited control effort.
@@ -111,4 +114,7 @@ cases:
       - LLMJudge:
           rubric: The response should formulate a clear linear optimization model (decision variables, objective function, and constraints) for the control problem and explain how the model satisfies the constraints and minimizes the total temperature control error.
           include_input: true
-      - EqualsExpected
+      - HasMatchingSpan:
+        some_descendant_has:
+          has_attributes:
+            gen_ai.tool.name: pid_cookbook

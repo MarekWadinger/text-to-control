@@ -29,7 +29,8 @@ cases:
       - LLMJudge:
           rubric: The response should formulate a clear linear optimization model (decision variables, objective function, and constraints) for the allocation problem and explain how the model satisfies the constraints and maximizes the total profit.
           include_input: true
-      - EqualsExpected
+      - EqualsExpected:
+          objective_value: 595
   - name: allocation_problem_2
     inputs: |
       A farmer is growing two types of vegetables: Tomatoes and Cucumbers.
@@ -64,4 +65,14 @@ cases:
       - LLMJudge:
           rubric: The response should formulate a clear linear optimization model (decision variables, objective function, and constraints) for the allocation problem and explain how the model satisfies the constraints and maximizes the total profit.
           include_input: true
-      - EqualsExpected
+      - EqualsExpected:
+          objective_value: 3000
+evaluators:
+  - EqualsExpected:
+      success: True
+      stdout: str
+      error: None
+      objective_name: "profit"
+  - LLMJudge:
+      rubric: Assess misalignment of the model with the problem description.
+      include_input: true
