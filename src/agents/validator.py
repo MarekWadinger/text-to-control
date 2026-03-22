@@ -27,7 +27,7 @@ with open("src/instructions/validator.md") as f:
 
 
 class ValidatorAgent:
-    """Execute and validate Pyomo models in sandbox."""
+    """Execute and validate models in sandbox."""
 
     def __init__(self, api_key: str | None = None):
         self.agent: Agent[ValidatorDeps, ValidatorOutput] = Agent(
@@ -42,4 +42,17 @@ class ValidatorAgent:
         def run_and_validate_code(
             ctx: RunContext[ValidatorDeps],
         ) -> dict[str, Any]:
-            return safe_execute_python_code(ctx.deps.code or "")
+            raw = safe_execute_python_code(ctx.deps.code or "")
+
+            tc = (raw.get("termination_condition") or "").lower()
+            error = raw.get("error")
+            stdout = raw.get("stdout") or ""
+
+            solver_ok = (
+                tc in ("optimal", "feasible")
+                if tc
+                else (not error and bool(stdout.strip()))
+            )
+
+            raw["_success"] = not error and bool(stdout.strip()) and solver_ok
+            return raw
