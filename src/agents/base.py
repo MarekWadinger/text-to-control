@@ -15,15 +15,18 @@ settings = Settings()
 default_provider = OpenAIProvider(api_key=settings.openai_api_key)
 
 
-def get_model(api_key: str | None = None):
+def get_model(api_key: str | None = None, model_name: str = "gpt-5.4"):
     provider = OpenAIProvider(api_key=api_key) if api_key else default_provider
-    return OpenAIModel(model_name="gpt-4o-mini", provider=provider)
+    return OpenAIModel(model_name=model_name, provider=provider)
 
 
 def safe_execute_python_code(code: str) -> dict[str, Any]:
-    """Safely execute Python code (e.g. Pyomo model) in an isolated temp directory."""
-    from typing import Any
-
+    """Safely execute code (e.g. Pyomo model) in an isolated temp directory."""
+    code = code.replace("control.pole(", "control.poles(")
+    code = code.replace("ctrl.pole(", "ctrl.poles(")
+    code = code.replace("np.trapz(", "np.trapezoid(")
+    code = code.replace("spi.simps(", "np.trapezoid(")
+    code = code.replace("scipy.integrate.simps(", "np.trapezoid(")
     output_capture = io.StringIO()
     tmp_dir = tempfile.mkdtemp(prefix="sandbox_")
     script_path = os.path.join(tmp_dir, "model.py")
@@ -36,12 +39,9 @@ def safe_execute_python_code(code: str) -> dict[str, Any]:
         with contextlib.redirect_stdout(output_capture):
             ns = runpy.run_path(script_path)
 
-            for name, fn in ns.items():
-                if callable(fn) and "solve" in name.lower():
-                    fn()
-                    break
-            else:
-                pass
+            solve_fn = ns.get("solve_model")
+            if solve_fn and callable(solve_fn):
+                solve_fn()
 
         result["stdout"] = output_capture.getvalue()
         result["error"] = None
