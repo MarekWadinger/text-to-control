@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from pydantic import BaseModel
-from pydantic_ai import Agent
+from pydantic_ai import Agent, RunContext
 
 from .base import get_model
 
@@ -36,6 +36,8 @@ class ExpertOutput(BaseModel):
 
 with open("src/instructions/expert.md") as f:
     expert_instructions = f.read()
+with open("src/instructions/expert_pid.md") as f:
+    pid_instructions = f.read()
 
 
 class ExpertAgent:
@@ -49,3 +51,35 @@ class ExpertAgent:
             instructions=expert_instructions,
             retries=3,
         )
+
+        # --- PID tool ---
+        @self.agent.tool
+        async def pid_specialist(
+            ctx: RunContext[ExpertDeps],
+            problem_description: str,
+        ) -> ExpertOutput:
+            """
+            Use this tool ONLY if the problem is about PID controller tuning.
+            """
+            reformulated_problem = (
+                f"{pid_instructions}\n\nUser problem:\n{problem_description}"
+            )
+            return ExpertOutput(
+                reformulated_problem=reformulated_problem,
+                problem_type=ProblemType.NLP,
+                assumptions=[],
+            )
+
+    # --- Run method ---
+    async def run(self, user_input: str, deps: ExpertDeps | None = None):
+        if deps is None:
+            deps = ExpertDeps()
+
+        pid_keywords = ["kp", "ki", "kd", "pid", "pi", "pd", "p", "controller"]
+        if any(kw in user_input.lower() for kw in pid_keywords):
+            # automaticky volá PID tool
+            return await self.agent.tools["pid_specialist"](
+                user_input, deps=deps
+            )
+
+        return await self.agent.run(user_input, deps=deps)
