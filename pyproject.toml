@@ -12,7 +12,7 @@ dependencies = [
     "control>=0.10.2",
     "logfire>=4.13.2",
     "numpy>=2.3.4",
-    "pydantic-ai-slim[google]>=1.0.15",
+    "pydantic-ai-slim[google,openai]>=1.0.15",
     "pydantic-settings>=2.11.0",
     "pyomo>=6.9.4",
     "rich>=14.2.0",
@@ -21,6 +21,7 @@ dependencies = [
     "st-gsheets-connection>=0.0.4",
     "pandas-stubs>=2.3.3.260113",
     "types-requests>=2.32.4.20260107",
+    "ruff>=0.14.14",
 ]
 
 [dependency-groups]
