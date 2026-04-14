@@ -31,7 +31,7 @@ app = [
 dev = [
     "commitizen>=4.9.1",
     "pre-commit>=4.3.0",
-    "pytest>=8.4.2",
+    "pytest>=9.0.3",
     "pytest-cov>=7.0.0",
     "ruff>=0.13.1",
     "ty>=0.0.1a21",
@@ -41,7 +41,7 @@ lint = [
     "ty>=0.0.1a21",
 ]
 test = [
-    "pytest>=8.4.2",
+    "pytest>=9.0.3",
     "pytest-cov>=7.0.0",
 ]
 
